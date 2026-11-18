@@ -1,11 +1,18 @@
 # -*- coding: utf-8 -*-
-# @Author : Frica01
+
 # @Time   : 2024/5/12 下午5:22
 # @Name   : config_utils.py
 
 import os
 from configparser import ConfigParser
 from pathlib import Path
+
+from config import (Animate, WeChatUpdate)
+
+DEFAULT_OPTIONS = {
+    Animate.SECTION: {Animate.OPTION: 'True'},
+    WeChatUpdate.SECTION: {WeChatUpdate.OPTION: 'False'},
+}
 
 
 def get_user_config_dir(app_name):
@@ -27,6 +34,25 @@ def get_user_config_dir(app_name):
         return Path.home() / ".config" / app_name
 
 
+def ensure_config_options(config):
+    """Add missing default sections and options to an existing config."""
+    changed = False
+    for section, options in DEFAULT_OPTIONS.items():
+        if section != 'DEFAULT' and not config.has_section(section):
+            config.add_section(section)
+            changed = True
+        for option, value in options.items():
+            if not config.has_option(section, option):
+                config.set(section, option, value)
+                changed = True
+    return changed
+
+
+def save_config(config, config_path):
+    with open(config_path, 'w') as configfile:
+        config.write(configfile)
+
+
 def create_default_config(config_path):
     """
     在指定路径创建一个默认配置文件。
@@ -37,15 +63,11 @@ def create_default_config(config_path):
     Returns:
         None
     """
-    # 创建ConfigParser对象
+    config_path = Path(config_path)
+    config_path.parent.mkdir(parents=True, exist_ok=True)
     config = ConfigParser()
-    # 创建一个新的config文件，并添加一个section
-    config['DEFAULT'] = {}
-    # 添加一个字段 animation=False 到 DEFAULT section
-    config.set('DEFAULT', 'animate_on_startup', 'True')
-    # 将配置项写入文件
-    with open(config_path, 'w') as configfile:
-        config.write(configfile)
+    ensure_config_options(config)
+    save_config(config, config_path)
 
 
 def get_config(app_name, section='DEFAULT', option=None):
@@ -72,9 +94,11 @@ def get_config(app_name, section='DEFAULT', option=None):
     if not config_path.exists():
         create_default_config(config_path)
 
-    # 读取配置文件
     config = ConfigParser()
-    config.read(config_path)
+    if not config.read(config_path):
+        create_default_config(config_path)
+        config.read(config_path)
+    ensure_config_options(config)
     return config.getboolean(section, option=option)
 
 
@@ -96,14 +120,18 @@ def write_config(app_name, section, option, value):
     config_dir = get_user_config_dir(app_name)
     config_path = config_dir / "config.ini"
 
-    # 读取或创建 ConfigParser 对象
     config = ConfigParser()
     if not config.read(config_path):
         create_default_config(config_path=config_path)
+        config.read(config_path)
+
+    ensure_config_options(config)
+
+    if section != 'DEFAULT' and not config.has_section(section):
+        config.add_section(section)
 
     # 设置或更新配置项的值
-    config.set(section, option, value)
+    config.set(section, option, str(value))
 
     # 将更新后的配置写回文件
-    with open(config_path, 'w') as configfile:
-        config.write(configfile)
+    save_config(config, config_path)

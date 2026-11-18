@@ -89,4 +89,3 @@ class Ui_InfoBar(object):
         self.prompt_info_label.setText(QCoreApplication.translate("Form", u"LabelText", None))
         self.btn_close_prompt.setText(QCoreApplication.translate("Form", u"X", None))
     # retranslateUi
-

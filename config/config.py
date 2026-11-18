@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 # Name:         config.py
-# Author:       小菜
 # Date:         2024/3/22 15:19
 # Description:
 
@@ -12,21 +11,58 @@ class AnimateConfig:
     OPTION = 'animate_on_startup'
 
 
+class WeChatUpdateConfig:
+    SECTION = 'WeChat'
+    OPTION = 'disable_auto_update'
+
+
 class WeChatConfig:
     WeChat_PROCESS_NAME = 'Weixin.exe'
+    LEGACY_PROCESS_NAME = 'WeChat.exe'
     # WeChat_PROCESS_NAME = 'WeChat.exe'
     APP_NAME = 'WeChatMassTool'
     APP_PROCESS_NAME = 'WeChatMassTool.exe'
     APP_LOCK_NAME = 'WeChatMassTool.lock'
+    MIN_SUPPORTED_VERSION = (4, 0, 0, 0)
+    DOWNLOAD_LINK = 'https://pc.weixin.qq.com/'
     WINDOW_NAME = '微信'
     WINDOW_CLASSNAME = 'mmui::MainWindow'
+    QT_WINDOW_CLASSNAME_PREFIX = 'Qt'
+    CONTACT_MANAGER_WINDOW_NAME = '通讯录管理'
+    CHAT_TAB_X = 35
+    CHAT_TAB_Y = 110
+    CHAT_FOCUS_X = 200
+    CHAT_FOCUS_Y = 150
+    CONTACT_TAB_X = 35
+    CONTACT_TAB_Y = 153
+    CONTACT_MANAGER_BUTTON_X = 150
+    CONTACT_MANAGER_BUTTON_Y = 98
+    RECENT_GROUPS_BUTTON_X = 52
+    RECENT_GROUPS_BUTTON_Y = 216
+    GROUP_LIST_CROP_LEFT = 0.0
+    GROUP_LIST_CROP_TOP = 0.34
+    GROUP_LIST_CROP_WIDTH = 0.30
+    GROUP_LIST_CROP_HEIGHT = 0.66
+    GROUP_LIST_SCROLL_TIMES = 5
+    GROUP_LIST_MAX_SCROLL = 50
+    SEARCH_BOX_X = 165
+    SEARCH_BOX_Y = 53
+    SEARCH_CONTACT_ROW_X = 290
+    SEARCH_CONTACT_ROW_Y = 145
+    SEARCH_WINDOW_CLASSNAME = 'mmui::SearchContentPopover'
+    SEARCH_LIST_AUTOMATION_ID = 'search_list'
+    INPUT_AUTOMATION_ID = 'chat_input_field'
+    INPUT_CLASS_NAME = 'mmui::ChatInputField'
+    WINDOW_LAUNCH_SECOND = 10
+    WINDOW_LAUNCH_INTERVAL = 0.25
 
 
 class ViewConfig:
     # APP SETTINGS
-    MENU_WIDTH = 180
+    MENU_WIDTH = 224
+    MENU_COLLAPSED_WIDTH = 72
     LEFT_BOX_WIDTH = 360
-    RIGHT_BOX_WIDTH = 240
+    RIGHT_BOX_WIDTH = 0
     TIME_ANIMATION = 500
 
 
@@ -34,71 +70,36 @@ class DarkConfig:
     QSS_FILE = 'views/resources/themes/py_dracula_dark.qss'
 
     # BTNS LEFT AND RIGHT BOX COLORS
-    BTN_LEFT_BOX_COLOR = "background-color: rgb(44, 49, 58);"
-    BTN_RIGHT_BOX_COLOR = "background-color: #ff79c6;"
+    BTN_LEFT_BOX_COLOR = "background-color: #173A26;"
+    BTN_RIGHT_BOX_COLOR = "background-color: #22C55E;"
 
     # MENU SELECTED STYLESHEET
     MENU_SELECTED_STYLESHEET = """
-        border-left: 22px solid qlineargradient(spread:pad, x1:0.034, y1:0, x2:0.216, y2:0, stop:0.499 rgba(255, 121, 198, 255), stop:0.5 rgba(85, 170, 255, 0));
-        background-color: rgb(40, 44, 52);
+        background-color: #173A26;
+        border: 1px solid #245C3A;
+        color: #4ADE80;
         """
 
     # MANUAL STYLES
-    MANUAL_STYLES = {
-        'wechat': '''QTextEdit{background-color: rgb(27, 29, 35); font: 12pt "Microsoft YaHei UI";} 
-                    QFrame #frame_sub_1, 
-                    QFrame#frame_sub_2, 
-                    QFrame#frame_sub_3, 
-                    QFrame#frame_sub_4 {
-                        border: 2px solid #5D535E;border-radius: 6px;
-                    }''',
-        'file_list_widget': '''QListWidget {
-                                    background-color: rgb(27, 29, 35);
-                                    border-radius: 5px;
-                                    padding: 3px;
-                                    border: 1px solid rgb(45, 45, 58);
-                                    font: 12pt "Microsoft YaHei UI";
-                                    color: #f8f8f2;
-                                }'''
-
-    }
+    MANUAL_STYLES = {}
 
 
 class LightConfig:
     QSS_FILE = 'views/resources/themes/py_dracula_light.qss'
 
     # BTNS LEFT AND RIGHT BOX COLORS
-    BTN_LEFT_BOX_COLOR = "background-color: #495474;"
-    BTN_RIGHT_BOX_COLOR = "background-color: #495474;"
+    BTN_LEFT_BOX_COLOR = "background-color: #DCFCE7;"
+    BTN_RIGHT_BOX_COLOR = "background-color: #16A34A;"
 
     # MENU SELECTED STYLESHEET
     MENU_SELECTED_STYLESHEET = """
-        border-left: 22px solid qlineargradient(spread:pad, x1:0.034, y1:0, x2:0.216, y2:0, stop:0.499 rgba(255, 121, 198, 255), stop:0.5 rgba(85, 170, 255, 0));
-        background-color: #566388;
+        background-color: #DCFCE7;
+        border: 1px solid #BBF7D0;
+        color: #15803D;
         """
 
     # MANUAL STYLES
-    MANUAL_STYLES = {
-        'wechat': '''QTextEdit{
-                        background-color: #6272a4; 
-                        font: 12pt "Microsoft YaHei UI";
-                    } 
-                    QFrame#frame_sub_1, 
-                    QFrame#frame_sub_2, 
-                    QFrame#frame_sub_3, 
-                    QFrame#frame_sub_4 {
-                        border: 2px solid #627282;
-                        border-radius: 6px;
-                    }''',
-        'file_list_widget': '''QListWidget {
-                                    background-color: #6272a4;
-                                    border-radius: 5px;
-                                    padding: 3px;
-                                    border: 1px solid rgb(45, 45, 58);
-                                    font: 12pt "Microsoft YaHei UI";
-                                    color: #f8f8f2;
-                                }'''
-    }
+    MANUAL_STYLES = {}
 
 
 class IntervalConfig:

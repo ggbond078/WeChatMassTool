@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 # Name:         animations.py
-# Author:       小菜
 # Date:         2024/4/01 00:00
 # Description:
 

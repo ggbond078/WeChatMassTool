@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 # Name:         login_window.py
-# Author:       小菜
 # Date:         2024/4/01 00:00
 # Description:
 
@@ -38,9 +37,9 @@ class LoginWindow(QMainWindow):
         self.progress.font_size = 20
         self.progress.add_shadow()
         self.progress.progress_width = 4
-        self.progress.progress_color = QColor("#bdff00")
-        self.progress.text_color = QColor("#E6E6E6")
-        self.progress.bg_color = QColor("#222222")
+        self.progress.progress_color = QColor("#22C55E")
+        self.progress.text_color = QColor("#E6EDF5")
+        self.progress.bg_color = QColor("#1E2A38")
         self.progress.setParent(self.ui.preloader)
         self.progress.show()
 

@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+  <Product
+      Id="*"
+      Name="WeChatMassTool"
+      Language="1033"
+      Version="1.0.0"
+      Manufacturer="Frica"
+      UpgradeCode="7f3a2c9e-8d41-4b6f-9a2c-5e1d7b8f3c60">
+    <Package InstallerVersion="200" Compressed="yes" InstallScope="perMachine" />
+    <MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed." />
+    <MediaTemplate EmbedCab="yes" />
+    <WixVariable Id="WixUILicenseRtf" Value="License.rtf" />
+
+    <UI>
+      <UIRef Id="WixUI_Minimal" />
+    </UI>
+
+    <Feature Id="ProductFeature" Title="WeChatMassTool" Level="1">
+      <ComponentGroupRef Id="ApplicationComponents" />
+    </Feature>
+
+    <CustomAction Id="SetShortcutTarget" Property="ShortcutTarget" Value="[INSTALLFOLDER]WeChatMassTool.exe" />
+    <InstallExecuteSequence>
+      <Custom Action="SetShortcutTarget" After="InstallFiles" />
+    </InstallExecuteSequence>
+
+    <Directory Id="TARGETDIR" Name="SourceDir">
+      <Directory Id="ProgramFiles64Folder">
+        <Directory Id="INSTALLFOLDER" Name="WeChatMassTool" />
+      </Directory>
+    </Directory>
+  </Product>
+
+  <Fragment>
+    <ComponentGroup Id="ApplicationComponents">
+      <Component Directory="INSTALLFOLDER">
+        <File Id="MainExecutable" Source="$(var.MainExecutable)" KeyPath="yes" />
+        <Shortcut Id="StartMenuShortcut" Directory="ApplicationProgramsFolder" Name="WeChatMassTool" Target="[#MainExecutable]" WorkingDirectory="INSTALLFOLDER" Icon="ApplicationIcon.exe" />
+        <Shortcut Id="DesktopShortcut" Directory="DesktopFolder" Name="WeChatMassTool" Target="[#MainExecutable]" WorkingDirectory="INSTALLFOLDER" Icon="ApplicationIcon.exe" />
+      </Component>
+      <Component Directory="INSTALLFOLDER">
+        <RemoveFolder Id="RemoveApplicationProgramsFolder" Directory="ApplicationProgramsFolder" On="uninstall" />
+        <RegistryValue Root="HKCU" Key="Software\Frica\WeChatMassTool" Name="installed" Type="integer" Value="1" KeyPath="yes" />
+      </Component>
+    </ComponentGroup>
+  </Fragment>
+
+  <Fragment>
+    <DirectoryRef Id="TARGETDIR">
+      <Directory Id="ProgramMenuFolder">
+        <Directory Id="ApplicationProgramsFolder" Name="WeChatMassTool" />
+      </Directory>
+      <Directory Id="DesktopFolder" Name="Desktop" />
+    </DirectoryRef>
+    <Icon Id="ApplicationIcon.exe" SourceFile="$(var.MainExecutable)" />
+  </Fragment>
+</Wix>

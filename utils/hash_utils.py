@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 # Name:         hash_utils.py
-# Author:       小菜
 # Date:         2024/5/24 上午02:18
 # Description:
 

@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 # Name:         main.py
-# Author:       小菜
 # Date:         2024/4/01 00:00
 # Description:
 
@@ -12,16 +11,17 @@ from ctypes import windll
 import PySide6
 import uiautomation
 from PySide6 import QtGui
-from PySide6.QtWidgets import (QApplication, QMessageBox, QWidget)
+from PySide6.QtWidgets import (QApplication, QMessageBox)
 from cprint import cprint
 
 from config import (Animate, WeChat)
 from controllers import ControllerMain
 from utils import (
     get_specific_process, is_process_running, get_resource_path, get_config, minimize_wechat, write_file, delete_file,
-    path_exists, get_temp_file_path, read_file, get_pid, delete_old_files_with_extension, join_path
+    path_exists, get_temp_file_path, read_file, get_pid, delete_old_files_with_extension, join_path,
+    get_wechat_version, format_version, open_webpage
 )
-from version import (__version__, __project_name__, __author__)
+from version import (__version__, __project_name__)
 
 
 def set_app_user_model_id():
@@ -37,24 +37,23 @@ def print_startup_info():
     # 获取系统信息
     system_info = platform.uname()
 
-    bot_logo = r""" 
+    bot_logo = r"""
 
-    /¯¯¯¯\         /¯¯¯¯\         /¯¯¯¯\     
-  o-|[][]|-o     o-|[][]|-o     o-|[][]|-o   
-    |_--_|         |_--_|         |_--_|     
- /¯¯¯¯¯¯¯¯¯¯\   /¯¯¯¯¯¯¯¯¯¯\   /¯¯¯¯¯¯¯¯¯¯\  
- |||  «»  |||   |||  «»  |||   |||  «»  |||  
- |||      |||   |||      |||   |||      |||  
-(o)|      |(o) (o)|      |(o) (o)|      |(o) 
-   |  ||  |       |  ||  |       |  ||  |    
-   |__||__|       |__||__|       |__||__|    
+    /¯¯¯¯\         /¯¯¯¯\         /¯¯¯¯\
+  o-|[][]|-o     o-|[][]|-o     o-|[][]|-o
+    |_--_|         |_--_|         |_--_|
+ /¯¯¯¯¯¯¯¯¯¯\   /¯¯¯¯¯¯¯¯¯¯\   /¯¯¯¯¯¯¯¯¯¯\
+ |||  «»  |||   |||  «»  |||   |||  «»  |||
+ |||      |||   |||      |||   |||      |||
+(o)|      |(o) (o)|      |(o) (o)|      |(o)
+   |  ||  |       |  ||  |       |  ||  |
+   |__||__|       |__||__|       |__||__|
    |__||__|       |__||__|       |__||__|
 """
     # 启动信息
     startup_info = f"""
         项目名称: {__project_name__}
         版本: {__version__}
-        作者: {__author__}
         启动时间: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
         系统: {system_info.system} {system_info.release}
         版本: {system_info.version}
@@ -69,11 +68,55 @@ def print_startup_info():
     cprint.info(startup_info.rstrip('\n'))
 
 
+def show_wechat_upgrade_dialog(current_version: str):
+    """提示用户升级微信版本以保持兼容性"""
+    required_version = format_version(WeChat.MIN_SUPPORTED_VERSION)
+    message_box = QMessageBox()
+    message_box.setWindowTitle('微信版本兼容性提示')
+    message_box.setIcon(QMessageBox.Warning)
+    message_box.setText(f'当前微信版本：{current_version}')
+    message_box.setInformativeText(
+        f'本工具需要微信 {required_version} 及以上版本才能稳定运行。\n'
+        '建议升级微信，并在设置中关闭微信自动更新，避免版本变化导致群发功能失效。'
+    )
+    download_button = message_box.addButton('前往下载', QMessageBox.AcceptRole)
+    message_box.addButton('稍后', QMessageBox.RejectRole)
+    message_box.setDefaultButton(download_button)
+    message_box.exec()
+    if message_box.clickedButton() is download_button:
+        open_webpage(WeChat.DOWNLOAD_LINK)
+
+
+def check_wechat_version(proc_name: str):
+    """检查微信版本是否满足兼容性要求"""
+    try:
+        version = get_wechat_version(proc_name=proc_name)
+    except (ValueError, OSError) as error:
+        if proc_name == WeChat.LEGACY_PROCESS_NAME:
+            show_wechat_upgrade_dialog(current_version='3.x')
+            return
+        QMessageBox.warning(
+            None,
+            '微信版本检测失败',
+            f'无法读取微信版本，请确认微信安装完整后重试。\n{error}'
+        )
+        return
+
+    version_text = format_version(version)
+    if version < WeChat.MIN_SUPPORTED_VERSION:
+        show_wechat_upgrade_dialog(current_version=version_text)
+
+
 def check_wechat_running():
-    """检查微信是否运行"""
-    if not get_specific_process(proc_name=WeChat.WeChat_PROCESS_NAME):
-        QMessageBox.critical(QWidget(), '报错咯', "微信未启动!")
-        sys.exit()  # 退出程序
+    """检查微信是否运行，并提示版本兼容性"""
+    if get_specific_process(proc_name=WeChat.WeChat_PROCESS_NAME):
+        check_wechat_version(proc_name=WeChat.WeChat_PROCESS_NAME)
+        return
+    if get_specific_process(proc_name=WeChat.LEGACY_PROCESS_NAME):
+        check_wechat_version(proc_name=WeChat.LEGACY_PROCESS_NAME)
+        return
+    QMessageBox.critical(None, '报错咯', "微信未启动!")
+    sys.exit()  # 退出程序
 
 
 def initialize_application():

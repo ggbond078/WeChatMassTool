@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 # Name:         infobar_window.py
-# Author:       小菜
 # Date:         2024/5/23 上午01:09
 # Description:
 

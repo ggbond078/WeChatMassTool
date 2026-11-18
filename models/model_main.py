@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
 # Name:         model_main.py
-# Author:       小菜
 # Date:         2024/4/1 00:00
 # Description:
 
 from typing import Dict
 from collections import defaultdict
+
+import uiautomation as auto
 from PySide6.QtCore import (QObject, QRunnable, QThreadPool, Slot, Signal)
 
 from utils import (WxOperation, write_file)
@@ -23,7 +24,8 @@ class TaskRunnable(QRunnable):
 
     def run(self):
         try:
-            self.execute_task()
+            with auto.UIAutomationInitializerInThread():
+                self.execute_task()
         except Exception as e:
             self.handle_error(e)
         finally:
@@ -102,9 +104,13 @@ class GetChatGroupNameListTask(TaskRunnable):
     def execute_task(self):
         file_path = self.kwargs.get('file_path')
         exportChatGroupNameListSignal = self.kwargs.get('exportChatGroupNameListSignal')
-        result = self.func()
-        write_file(file_path, data=result)
-        exportChatGroupNameListSignal.emit(True, '文件导出成功')
+        try:
+            result = self.func()
+            write_file(file_path, data=result)
+            exportChatGroupNameListSignal.emit(True, '文件导出成功')
+        except Exception as error:
+            exportChatGroupNameListSignal.emit(False, f'导出失败: {error}')
+            raise
 
 
 class ModelMain(QObject):

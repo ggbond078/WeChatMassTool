@@ -26,7 +26,7 @@ class Ui_MainWindow(object):
             u"/* /////////////////////////////////////////////////////////////////////////////////////////////////\n"
             "\n"
             "SET APP STYLESHEET - FULL STYLES HERE\n"
-            "DARK THEME - DRACULA COLOR BASED\n"
+            "DARK THEME - MINIMAL BLUE-GRAY BASED\n"
             "\n"
             "///////////////////////////////////////////////////////////////////////////////////////////////// */\n"
             "\n"
@@ -1136,7 +1136,7 @@ class Ui_MainWindow(object):
                                          "")
         self.home = QWidget()
         self.home.setObjectName(u"home")
-        self.home.setStyleSheet(u"background-image: url(:/images/images/PyDracula_vertical.png);\n"
+        self.home.setStyleSheet(u"background-image: url(:/images/images/WeChatMass_vertical.png);\n"
                                 "background-position: center;\n"
                                 "background-repeat: no-repeat;\n"
                                 "background-image: url(:/images/images/WeChatMass_vertical.png);")
@@ -1699,10 +1699,10 @@ class Ui_MainWindow(object):
         self.titleLeftApp.setToolTip("")
         # endif // QT_CONFIG(tooltip)
         self.titleLeftApp.setText(QCoreApplication.translate("MainWindow", u"WeChatMass", None))
-        self.titleLeftDescription.setText(QCoreApplication.translate("MainWindow", u"\u9065\u9065\u9886\u5148", None))
+        self.titleLeftDescription.setText(QCoreApplication.translate("MainWindow", u"微信群发助手", None))
         self.toggleButton.setText(QCoreApplication.translate("MainWindow", u"\u9690\u85cf", None))
         self.btn_page_home.setText(QCoreApplication.translate("MainWindow", u"\u4e3b\u9875", None))
-        self.btn_page_pending.setText(QCoreApplication.translate("MainWindow", u"\u5f85\u5b9a", None))
+        self.btn_page_pending.setText(QCoreApplication.translate("MainWindow", u"联系人", None))
         self.btn_page_msg.setText(QCoreApplication.translate("MainWindow", u"\u7fa4\u53d1\u6d88\u606f", None))
         # if QT_CONFIG(tooltip)
         self.toggleTheme.setToolTip("")
@@ -1771,25 +1771,19 @@ class Ui_MainWindow(object):
                                                          "<html><head><meta name=\"qrichtext\" content=\"1\" /><meta charset=\"utf-8\" /><style type=\"text/css\">\n"
                                                          "p, li { white-space: pre-wrap; }\n"
                                                          "hr { height: 1px; border-width: 0; }\n"
-                                                         "li.unchecked::marker { content: \"\\2610\"; }\n"
-                                                         "li.checked::marker { content: \"\\2612\"; }\n"
                                                          "</style></head><body style=\" font-family:'Microsoft YaHei UI'; font-size:10pt; font-weight:400; font-style:normal;\">\n"
-                                                         "<p align=\"center\" style=\" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:14pt; font-weight:600; color:#ff79c6;\">WeChatMassTool</span></p>\n"
-                                                         "<p align=\"center\" style=\" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" color:#ffffff;\">\u57fa\u4e8ePySide6 \u548c Python \u6784\u5efa\u7684\u5fae\u4fe1\u7fa4\u53d1\u5de5\u5177\uff0c\u63d0\u4f9b\u7b80"
-                                                         "\u5355\u9ad8\u6548\u7684\u7fa4\u53d1\u6d88\u606f\u529f\u80fd\u3002\u5de5\u5177\u6837\u5f0f\u57fa\u4e8e </span><span style=\" font-weight:700; color:#bd93f9;\">PyDracula</span>\u3002</p>\n"
-                                                         "<p align=\"center\" style=\" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt; font-weight:600; color:#ff79c6;\">\u5982\u4f55\u83b7\u53d6</span></p>\n"
-                                                         "<p align=\"center\" style=\" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:9pt; color:#ffffff;\">\u5173\u6ce8\u516c\u4f17\u53f7\uff1a</span><span style=\" font-weight:700; color:#bd93f9;\">\u5c0f\u83dc\u7684Python\u6742\u8d27\u94fa</span><span style=\" font-size:9pt; color:#ffffff;\"><br />\u56de\u590d\uff1a</span><span style=\" font-size:9pt; font-weight:700; color:#ff79c6;\">\u5fae\u4fe1\u7fa4\u53d1</span><span style=\" font-size:9pt; color:#ffffff;\">\uff0c\u5373\u53ef\u83b7\u53d6</span></p>\n"
-                                                         ""
-                                                         "<p align=\"center\" style=\" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt; font-weight:600; color:#ff79c6;\">\u5982\u4f55\u4f7f\u7528</span></p>\n"
-                                                         "<p align=\"center\" style=\" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:9pt; color:#ffffff;\">\u53cc\u51fb\u6b64\u5904\uff0c\u5373\u53ef\u6253\u5f00\u89c6\u9891\u6559\u7a0b</span></p>\n"
-                                                         "<p align=\"center\" style=\" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt; font-weight:600; color:#ff79c6;\">\u6280\u672f\u6808</span></p>\n"
-                                                         "<p align=\"center\" style=\" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" color:#ffffff;\">\u4f7f\u7528 PySide6 \u8fdb\u884c UI \u5f00\u53d1\uff0cPython \u811a\u672c\u8fdb\u884c\u540e"
-                                                         "\u7aef\u903b\u8f91\u5904\u7406\u3002</span></p>\n"
-                                                         "<p align=\"center\" style=\" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt; font-weight:600; color:#ff79c6;\">\u5f00\u53d1\u8005</span></p>\n"
-                                                         "<p align=\"center\" style=\" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-weight:700; color:#bd93f9;\">\u7531\u5c0f\u83dc\u7cbe\u5fc3\u5f00\u53d1</span></p></body></html>",
+                                                         "<p align=\"center\" style=\" margin-top:24px; margin-bottom:16px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:18pt; font-weight:700; color:#38bdf8;\">WeChatMassTool</span></p>\n"
+                                                         "<p align=\"center\" style=\" margin-top:0px; margin-bottom:24px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" color:#e2e8f0;\">简洁高效的微信群发消息工具</span></p>\n"
+                                                         "<p align=\"center\" style=\" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt; font-weight:600; color:#38bdf8;\">快速开始</span></p>\n"
+                                                         "<p align=\"center\" style=\" margin-top:0px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" color:#e2e8f0;\">切换到「群发消息」页</span></p>\n"
+                                                         "<p align=\"center\" style=\" margin-top:0px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" color:#e2e8f0;\">导入联系人名单并填写内容</span></p>\n"
+                                                         "<p align=\"center\" style=\" margin-top:0px; margin-bottom:24px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" color:#e2e8f0;\">点击「开始发送」</span></p>\n"
+                                                         "<p align=\"center\" style=\" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt; font-weight:600; color:#38bdf8;\">视频教程</span></p>\n"
+                                                         "<p align=\"center\" style=\" margin-top:0px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" color:#e2e8f0;\">双击此处打开教程</span></p>\n"
+                                                         "</body></html>",
                                                          None))
         self.titleRightInfo.setText(QCoreApplication.translate("MainWindow",
-                                                               u"<html><head/><body><p><span style=\"font-family:'Microsoft YaHei UI'; color:#ff79c6;\">WeChatMassTool</span> - \u57fa\u4e8ePython\u5f00\u53d1\u7684\u5fae\u4fe1\u7fa4\u53d1\u5de5\u5177.</p></body></html>",
+                                                               u"<html><head/><body><p><span style=\"font-family:'Microsoft YaHei UI'; color:#e2e8f0;\">微信群发助手</span></p></body></html>",
                                                                None))
         # if QT_CONFIG(tooltip)
         self.settingsTopBtn.setToolTip(QCoreApplication.translate("MainWindow", u"Settings", None))
@@ -1808,7 +1802,7 @@ class Ui_MainWindow(object):
         # endif // QT_CONFIG(tooltip)
         self.closeAppBtn.setText("")
         self.label.setText(QCoreApplication.translate("MainWindow",
-                                                      u"\u6b64\u9875\u9762\u5373\u5c06\u6dfb\u52a0\u670b\u53cb\u5708\u70b9\u8d5e\u529f\u80fd\u3002",
+                                                      u"此页面即将上线，敬请期待。",
                                                       None))
         self.single_line_msg_text_edit.setPlaceholderText(QCoreApplication.translate("MainWindow",
                                                                                      u"\u5728\u6b64\u5904\u8f93\u5165\u6d88\u606f\uff0c\u4e00\u884c\u4e3a\u4e00\u6761\u6d88\u606f",
@@ -1831,9 +1825,9 @@ class Ui_MainWindow(object):
         self.btn_send_msg.setText(QCoreApplication.translate("MainWindow", u"\u5f00\u59cb\u53d1\u9001", None))
         self.btn_pause_send.setText(QCoreApplication.translate("MainWindow", u"\u6682\u505c\u53d1\u9001", None))
         self.btn_clear_all.setText(QCoreApplication.translate("MainWindow", u"\u6e05\u7a7a\u5168\u90e8", None))
-        self.btn_message.setText(QCoreApplication.translate("MainWindow", u"Message", None))
-        self.btn_print.setText(QCoreApplication.translate("MainWindow", u"Print", None))
-        self.btn_logout.setText(QCoreApplication.translate("MainWindow", u"Logout", None))
-        self.creditsLabel.setText(QCoreApplication.translate("MainWindow", u"By: \u5c0f\u83dc", None))
+        self.btn_message.setText(QCoreApplication.translate("MainWindow", u"消息模板", None))
+        self.btn_print.setText(QCoreApplication.translate("MainWindow", u"发送记录", None))
+        self.btn_logout.setText(QCoreApplication.translate("MainWindow", u"退出工具", None))
+        self.creditsLabel.setText(QCoreApplication.translate("MainWindow", u"微信群发助手", None))
         self.version.setText(QCoreApplication.translate("MainWindow", u"v1.0.3", None))
     # retranslateUi

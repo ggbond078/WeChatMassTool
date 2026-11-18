@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 # Name:         controller_main.py
-# Author:       小菜
 # Date:         2024/04/01 00:00
 # Description:
 from copy import deepcopy
@@ -8,11 +7,11 @@ from copy import deepcopy
 from PySide6.QtCore import (QObject, QMutexLocker, QMutex, QWaitCondition, Slot)
 from PySide6.QtWidgets import (QFileDialog, QMessageBox)
 
-from config import (Animate, WeChat, TUTORIAL_LINK)
+from config import (Animate, WeChat, WeChatUpdate, TUTORIAL_LINK)
 from models import ModelMain
 from utils import (
-    read_file, write_file, write_config, get_file_sha256, get_temp_file_path, path_exists, delete_file, join_path,
-    open_webpage
+    read_file, write_file, get_config, write_config, get_file_sha256, get_temp_file_path, path_exists, delete_file,
+    join_path, open_webpage, disable_wechat_auto_update, enable_wechat_auto_update
 )
 from views import ViewMain
 
@@ -34,6 +33,7 @@ class ControllerMain(QObject):
         self.name_list_file = str()
         self.sha256_cache_file = str()
         self.init_animate_radio_btn(flag=animate_on_startup)
+        self.init_wechat_update_setting()
 
     def setup_connections(self):
         # 发送消息
@@ -52,7 +52,7 @@ class ControllerMain(QObject):
         self.view.btn_export_name_list.setToolTip("停用啦！")
         self.view.export_tag_name_list_line_edit.setToolTip("切换3.9的微信和工具使用")
         self.view.export_tag_name_list_line_edit.setReadOnly(True)
-        # self.view.btn_export_chat_group_name_list.clicked.connect(self.export_chat_group_name_list)   # 停用导出群聊
+        self.view.btn_export_chat_group_name_list.clicked.connect(self.export_chat_group_name_list)
         # 导出运行结果
         self.view.btn_export_result.clicked.connect(self.export_exec_result)
         # 添加 文件 QListWidget 控件右键菜单
@@ -67,6 +67,8 @@ class ControllerMain(QObject):
         # 开启和关闭动画启动按钮
         self.view.radio_btn_animate_true.clicked.connect(self.set_animate_startup_status)
         self.view.radio_btn_animate_false.clicked.connect(self.set_animate_startup_status)
+        # 开启和关闭微信自动更新
+        self.view.chk_disable_wechat_update.toggled.connect(self.set_wechat_auto_update_status)
         # 双击打开教程
         self.view.textEdit.mouseDoubleClickEvent = lambda x: open_webpage(TUTORIAL_LINK)
 
@@ -196,9 +198,9 @@ class ControllerMain(QObject):
     def init_animate_radio_btn(self, flag):
         """初始化动画配置单选按钮"""
         if flag:
-            self.view.radio_btn_animate_true.click()
+            self.view.radio_btn_animate_true.setChecked(True)
         else:
-            self.view.radio_btn_animate_false.click()
+            self.view.radio_btn_animate_false.setChecked(True)
 
     def set_animate_startup_status(self):
         """设置动画配置单选按钮状态"""
@@ -206,6 +208,38 @@ class ControllerMain(QObject):
             write_config(WeChat.APP_NAME, Animate.SECTION, Animate.OPTION, value=str(True))
         else:
             write_config(WeChat.APP_NAME, Animate.SECTION, Animate.OPTION, value=str(False))
+
+    def init_wechat_update_setting(self):
+        """初始化微信自动更新设置，并在已关闭时重新应用"""
+        disabled = get_config(WeChat.APP_NAME, WeChatUpdate.SECTION, WeChatUpdate.OPTION)
+        self.view.chk_disable_wechat_update.blockSignals(True)
+        self.view.chk_disable_wechat_update.setChecked(disabled)
+        self.view.chk_disable_wechat_update.blockSignals(False)
+        if not disabled:
+            return
+        try:
+            disable_wechat_auto_update(proc_name=WeChat.WeChat_PROCESS_NAME)
+        except OSError as error:
+            self.view.add_infobar(f'关闭微信自动更新失败: {error}', 'fail')
+
+    @Slot(bool)
+    def set_wechat_auto_update_status(self, disabled):
+        """关闭或恢复微信自动更新"""
+        try:
+            if disabled:
+                renamed = disable_wechat_auto_update(proc_name=WeChat.WeChat_PROCESS_NAME)
+                message = '微信自动更新已关闭' if renamed else '微信自动更新已处于关闭状态'
+            else:
+                restored = enable_wechat_auto_update(proc_name=WeChat.WeChat_PROCESS_NAME)
+                message = '微信自动更新已恢复' if restored else '微信自动更新已处于开启状态'
+        except OSError as error:
+            self.view.chk_disable_wechat_update.blockSignals(True)
+            self.view.chk_disable_wechat_update.setChecked(not disabled)
+            self.view.chk_disable_wechat_update.blockSignals(False)
+            self.view.add_infobar(f'设置失败: {error}', 'fail')
+            return
+        write_config(WeChat.APP_NAME, WeChatUpdate.SECTION, WeChatUpdate.OPTION, value=str(disabled))
+        self.view.add_infobar(message, 'success')
 
     def get_name_list_file_cache_index(self):
         """

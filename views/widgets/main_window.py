@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 # Name:         main_window.py
-# Author:       小菜
 # Date:         2024/4/01 00:00
 # Description:
 
@@ -13,7 +12,16 @@ from PySide6.QtWidgets import (QMainWindow, QApplication, QSizeGrip, QPushButton
 
 from config import (ViewConfig, DarkConfig, LightConfig)
 from views.ui_components import (
-    create_width_animation, create_animation_group, apply_shadow_effect, create_opacity_animation
+    create_animation_group, apply_shadow_effect, create_opacity_animation
+)
+from views.ui_components.workspace import (
+    apply_workspace_icons,
+    apply_workspace_theme,
+    apply_workspace_ui,
+    set_sidebar_compact,
+    update_home_responsive_layout,
+    update_message_responsive_layout,
+    update_header,
 )
 from views.ui_designs import Ui_MainWindow
 from views.widgets import CustomGrip
@@ -65,16 +73,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.toggle_setting_btn_style()
         self.toggle_selected_btn_style(is_add=False)
 
-        #
-        self.config = LightConfig if self.dark_theme else DarkConfig
+        theme_config = LightConfig if self.dark_theme else DarkConfig
         self.dark_theme = not self.dark_theme
-        # 设置全局的新样式，新主题
-        with open(get_resource_path(self.config.QSS_FILE), mode='r', encoding='utf-8') as f:
-            self.styleSheet.setStyleSheet(f.read())
-        # 设置部件的样式
-        for widget_name, style in self.config.MANUAL_STYLES.items():
-            widget = getattr(self, widget_name, None)
-            widget.setStyleSheet(style)
+        self.apply_theme(theme_config)
 
         # 设置当前选中的按钮的颜色
         btn: QPushButton = self.findChild(QPushButton, self.current_selected_btn)
@@ -92,11 +93,23 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         #
         self.initialize_window_resizing()
         #
+        apply_workspace_ui(self)
+        self.apply_theme(DarkConfig)
         self.toggle_selected_btn_style(self.btn_page_home)
         # 无边框
         self.setWindowFlag(Qt.FramelessWindowHint)
         # 半透明
         self.setAttribute(Qt.WA_TranslucentBackground)
+
+    def apply_theme(self, theme_config) -> None:
+        """应用一套完整主题样式。"""
+        self.config = theme_config
+        with open(get_resource_path(self.config.QSS_FILE), mode='r', encoding='utf-8') as file:
+            self.styleSheet.setStyleSheet(file.read())
+        for widget_name, style in self.config.MANUAL_STYLES.items():
+            widget = getattr(self, widget_name, None)
+            widget.setStyleSheet(style)
+        apply_workspace_theme(self, self.config is DarkConfig)
 
     def setup_connections(self):
         """事件绑定"""
@@ -155,7 +168,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.showMaximized()
             self.appMargins.setContentsMargins(0, 0, 0, 0)
             self.maximizeRestoreAppBtn.setToolTip("Restore")
-            self.maximizeRestoreAppBtn.setIcon(QIcon(u":/icons/icons/icon_restore.png"))
             self.frame_size_grip.hide()
             self.left_grip.hide()
             self.right_grip.hide()
@@ -166,13 +178,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.resize(self.width() + 1, self.height() + 1)
             self.appMargins.setContentsMargins(10, 10, 10, 10)
             self.maximizeRestoreAppBtn.setToolTip("Maximize")
-            self.maximizeRestoreAppBtn.setIcon(QIcon(u":/icons/icons/icon_maximize.png"))
             self.frame_size_grip.show()
             self.left_grip.show()
             self.right_grip.show()
             self.top_grip.show()
             self.bottom_grip.show()
         self.is_maximum_size = not self.is_maximum_size
+        apply_workspace_icons(self)
 
     def pause_and_continue_send(self):
         """暂停和继续发送"""
@@ -185,11 +197,21 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def toggle_menu(self):
         """切换菜单"""
         # GET TARGET WIDTH
-        target_width = ViewConfig.MENU_WIDTH if self.leftMenuBg.width() == 60 else 60
+        compact = self.leftMenuBg.width() > ViewConfig.MENU_COLLAPSED_WIDTH
+        target_width = ViewConfig.MENU_COLLAPSED_WIDTH if compact else ViewConfig.MENU_WIDTH
 
         # ANIMATION
-        self.animation = create_width_animation(self.leftMenuBg, target_width)
+        minimum_animation = QPropertyAnimation(self.leftMenuBg, b"minimumWidth")
+        minimum_animation.setDuration(ViewConfig.TIME_ANIMATION)
+        minimum_animation.setStartValue(self.leftMenuBg.minimumWidth())
+        minimum_animation.setEndValue(target_width)
+        maximum_animation = QPropertyAnimation(self.leftMenuBg, b"maximumWidth")
+        maximum_animation.setDuration(ViewConfig.TIME_ANIMATION)
+        maximum_animation.setStartValue(self.leftMenuBg.maximumWidth())
+        maximum_animation.setEndValue(target_width)
+        self.animation = create_animation_group([minimum_animation, maximum_animation])
         self.animation.start()
+        set_sidebar_compact(self, compact)
 
     # noinspection PyTypeChecker
     def toggle_selected_btn_style(self, widget=None, is_add=True):
@@ -267,11 +289,24 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         target_left_width, target_right_width = self.toggle_setting_btn_style()
 
         # 对左右面板执行展开或收起的动画
-        left_box = create_width_animation(self.extraLeftBox, target_left_width)
-        right_box = create_width_animation(self.extraRightBox, target_right_width)
+        animations = list()
+        for widget, target_width in (
+            (self.extraLeftBox, target_left_width),
+            (self.extraRightBox, target_right_width),
+        ):
+            minimum_animation = QPropertyAnimation(widget, b"minimumWidth")
+            minimum_animation.setDuration(ViewConfig.TIME_ANIMATION)
+            minimum_animation.setStartValue(widget.minimumWidth())
+            minimum_animation.setEndValue(target_width)
+            maximum_animation = QPropertyAnimation(widget, b"maximumWidth")
+            maximum_animation.setDuration(ViewConfig.TIME_ANIMATION)
+            maximum_animation.setStartValue(widget.maximumWidth())
+            maximum_animation.setEndValue(target_width)
+            animations.extend((minimum_animation, maximum_animation))
 
         # GROUP ANIMATION
-        self.animation_group = create_animation_group([left_box, right_box])
+        self.animation_group = create_animation_group(animations)
+        self.animation_group.finished.connect(self.update_responsive_layout)
         self.animation_group.start()
 
     def switch_page(self):
@@ -287,13 +322,18 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if page == self.stackedWidget.currentWidget():
                 return
             # 切换页面
-            QTimer.singleShot(150, lambda: self.stackedWidget.setCurrentWidget(page))
+            def show_page():
+                self.stackedWidget.setCurrentWidget(page)
+                QTimer.singleShot(0, self.update_responsive_layout)
+
+            QTimer.singleShot(150, show_page)
             # 设置未被选中按钮样式
             self.toggle_selected_btn_style(is_add=False)
             # 设置选中的按钮样式
             self.toggle_selected_btn_style(selected_btn)
             # 记录当前选中的按钮
             self.current_selected_btn = selected_btn_name
+            update_header(self, selected_btn_name)
         print(f'Button "{selected_btn_name}" pressed!')
 
     def add_list_widget_menu(self):
@@ -332,8 +372,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             progress = int((current / total) * 100)
             self.task_progress_bar.setValue(progress)
             self.task_label.setText(f"需发送: {total} 位")
+            if hasattr(self, 'home_pending_value'):
+                self.home_pending_value.value_label.setText(str(total))
+                self.home_progress_value.value_label.setText(f"{progress}%")
+                self.home_status_value.value_label.setText("已完成" if current >= total else "进行中")
         else:
             self.task_progress_bar.setValue(0)
+            if hasattr(self, 'home_pending_value'):
+                self.home_pending_value.value_label.setText("0")
+                self.home_progress_value.value_label.setText("0%")
+                self.home_status_value.value_label.setText("就绪")
 
     def show_message_box(self, message, icon, duration=1500):
         """显示一个消息框，并可选地在给定时间后自动关闭。
@@ -415,10 +463,20 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def resizeEvent(self, event):
         """处理窗口大小调整事件"""
+        self.update_responsive_layout()
         self.left_grip.setGeometry(0, 10, 10, self.height())
         self.right_grip.setGeometry(self.width() - 10, 10, 10, self.height())
         self.top_grip.setGeometry(0, 0, self.width(), 10)
         self.bottom_grip.setGeometry(0, self.height() - 10, self.width(), 10)
+
+    def showEvent(self, event):
+        """窗口显示后刷新响应式布局。"""
+        super().showEvent(event)
+        QTimer.singleShot(0, self.update_responsive_layout)
+
+    def update_responsive_layout(self):
+        update_home_responsive_layout(self)
+        update_message_responsive_layout(self)
 
 
 if __name__ == "__main__":

@@ -1,0 +1,62 @@
+version: 2.1
+
+orbs:
+  win: circleci/windows@5.0
+
+jobs:
+  build:
+    executor:
+      name: win/default
+      shell: powershell.exe
+      size: "medium"
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - v1-conda-{{ checksum "requirements.txt" }}
+      - run:
+          name: Create or update conda environment
+          command: |
+            $condaRoot = "$env:USERPROFILE\miniconda3"
+            $env:PATH = "$condaRoot;$condaRoot\Scripts;$condaRoot\condabin;$env:PATH"
+            $python = "$condaRoot\envs\wechat-mass-tool\python.exe"
+            if (-not (Test-Path $python)) {
+              if (-not (Test-Path "$condaRoot\condabin\conda.bat")) {
+                Invoke-WebRequest https://repo.anaconda.com/miniconda/Miniconda3-latest-Windows-x86_64.exe -OutFile miniconda.exe
+                Start-Process miniconda.exe -ArgumentList "/InstallationType=JustMe /AddToPath=0 /RegisterPython=0 /S /D=$condaRoot" -Wait -NoNewWindow
+              }
+              & "$condaRoot\condabin\conda.bat" create -n wechat-mass-tool python=3.12 -y
+            }
+            & $python -m pip install -r requirements.txt
+      - save_cache:
+          key: v1-conda-{{ checksum "requirements.txt" }}
+          paths:
+            - C:\Users\circleci\miniconda3\envs\wechat-mass-tool
+      - run:
+          name: Install WiX Toolset
+          command: |
+            $wixPath = "C:\Program Files (x86)\WiX Toolset v3.14\bin"
+            if (-not (Test-Path $wixPath)) {
+              choco install wixtoolset -y --no-progress
+            }
+            $env:PATH = "$wixPath;$env:PATH"
+            candle.exe -? | Select-Object -First 1
+      - run:
+          name: Build executable with PyInstaller
+          command: |
+            & C:\Users\circleci\miniconda3\envs\wechat-mass-tool\python.exe -m PyInstaller ./make/WeChatMassTool.spec --noconfirm
+      - run:
+          name: Build MSI installer
+          command: |
+            $wixPath = "C:\Program Files (x86)\WiX Toolset v3.14\bin"
+            $env:PATH = "$wixPath;$env:PATH"
+            candle.exe installer/WeChatMassTool.wxs -dMainExecutable="dist\WeChatMassTool.exe" -o installer/WeChatMassTool.wixobj
+            light.exe -sval installer/WeChatMassTool.wixobj -o dist/WeChatMassTool.msi
+      - store_artifacts:
+          path: dist/WeChatMassTool.msi
+          destination: WeChatMassTool.msi
+
+workflows:
+  package:
+    jobs:
+      - build
