@@ -1,7 +1,7 @@
 # ///////////////////////////////////////////////////////////////
 #
 # BY: WANDERSON M.PIMENTA
-# PROJECT MADE WITH: Qt Designer and PySide6
+# PROJECT MADE WITH: Qt Designer and PySide2
 # V: 1.0.0
 #
 # This project can be used freely for all uses, as long as they maintain the
@@ -13,9 +13,9 @@
 # https://doc.qt.io/qtforpython/licenses.html
 #
 # ///////////////////////////////////////////////////////////////
-from PySide6.QtCore import Qt, QRect, QSize
-from PySide6.QtGui import QCursor
-from PySide6.QtWidgets import QWidget, QSizeGrip, QFrame, QHBoxLayout
+from PySide2.QtCore import Qt, QRect, QSize
+from PySide2.QtGui import QCursor
+from PySide2.QtWidgets import QWidget, QSizeGrip, QFrame, QHBoxLayout
 
 
 class CustomGrip(QWidget):

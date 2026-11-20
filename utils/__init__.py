@@ -18,3 +18,6 @@ from utils.wx_operation import WxOperation
 from utils.wx_update_utils import (disable_wechat_auto_update, enable_wechat_auto_update)
 from utils.hash_utils import get_file_sha256
 from utils.browser_utils import open_webpage
+from utils.log_utils import (
+    get_log_dir, get_log_file_path, open_log_directory, log_event, log_exception, setup_logging
+)

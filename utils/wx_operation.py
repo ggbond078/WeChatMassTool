@@ -7,13 +7,15 @@ from __future__ import annotations
 
 """微信群发消息"""
 
-import ctypes
+import logging
+import os
 import re
 import time
 from copy import deepcopy
 from difflib import SequenceMatcher
-from typing import Iterable, List
+from typing import Iterable, List, TypedDict
 
+import pywintypes
 import uiautomation as auto
 import win32api
 import win32con
@@ -21,12 +23,22 @@ import win32gui
 
 from config import (WeChat, Interval)
 from utils import (copy_files_to_clipboard, wake_up_window)
+from utils.log_utils import log_event, log_exception
 from utils.ocr_utils import (
     normalize_ocr_text,
     read_wechat_chat_title,
-    read_window_text_lines
+    read_window_region,
+    save_window_screenshot
 )
-from utils.window_utils import find_visible_window, find_wechat_window
+from utils.window_utils import find_visible_window, find_wechat_window, get_window_dpi_scale
+
+logger = logging.getLogger(__name__)
+
+
+class WindowCandidate(TypedDict):
+    handle: int
+    title: str
+    class_name: str
 
 
 class WxOperation:
@@ -65,6 +77,29 @@ class WxOperation:
         self.window_handle: int = 0
         self.is_qt_window: bool = False
 
+    @staticmethod
+    def __list_window_candidates(
+            window_name: str,
+            window_class_name: str,
+            class_name_prefix: str
+    ) -> list[WindowCandidate]:
+        candidates = list()
+
+        def collect(hwnd, _):
+            if not win32gui.IsWindowVisible(hwnd):
+                return True
+            title = win32gui.GetWindowText(hwnd)
+            class_name = win32gui.GetClassName(hwnd)
+            class_matches = class_name == window_class_name or class_name.startswith(class_name_prefix)
+            if class_matches and (
+                    window_name in title or 'Weixin' in title or 'WeChat' in title or '微信' in title
+            ):
+                candidates.append({'handle': hwnd, 'title': title, 'class_name': class_name})
+            return True
+
+        win32gui.EnumWindows(collect, None)
+        return candidates[:20]
+
     def locate_wechat_window(self):
         if self.visible_flag and not win32gui.IsWindow(self.window_handle):
             self.visible_flag = False
@@ -87,12 +122,33 @@ class WxOperation:
                         break
                     time.sleep(WeChat.WINDOW_LAUNCH_INTERVAL)
             if not self.window_handle:
+                log_event(
+                    logger,
+                    logging.ERROR,
+                    'wechat_window_not_found',
+                    process_name=WeChat.WeChat_PROCESS_NAME,
+                    wait_seconds=WeChat.WINDOW_LAUNCH_SECOND,
+                    candidates=self.__list_window_candidates(
+                        window_name=WeChat.WINDOW_NAME,
+                        window_class_name=WeChat.WINDOW_CLASSNAME,
+                        class_name_prefix=WeChat.QT_WINDOW_CLASSNAME_PREFIX
+                    )
+                )
                 raise Exception('微信似乎并没有登录!')
             self.wx_window = auto.ControlFromHandle(self.window_handle)
-            self.is_qt_window = win32gui.GetClassName(self.window_handle).startswith(
+            window_class_name = win32gui.GetClassName(self.window_handle)
+            self.is_qt_window = window_class_name.startswith(
                 WeChat.QT_WINDOW_CLASSNAME_PREFIX
             )
             self.visible_flag = True
+            log_event(
+                logger,
+                logging.INFO,
+                'wechat_window_located',
+                window_handle=self.window_handle,
+                window_class=window_class_name,
+                is_qt_window=self.is_qt_window
+            )
         # 微信窗口置顶
         self.wx_window.SetTopmost(isTopmost=True)
 
@@ -101,18 +157,27 @@ class WxOperation:
         if self.is_qt_window:
             return False
         self.input_edit = self.wx_window.EditControl(Name=name)
-        if self.input_edit.Exists(Interval.MAX_SEARCH_SECOND, searchIntervalSeconds=Interval.MAX_SEARCH_INTERVAL):
-            return True
-        return False
+        matched = self.input_edit.Exists(
+            Interval.MAX_SEARCH_SECOND,
+            searchIntervalSeconds=Interval.MAX_SEARCH_INTERVAL
+        )
+        log_event(logger, logging.DEBUG, 'current_chat_match', recipient=name, matched=matched)
+        return matched
 
-    def __activate_wechat_tab(self) -> None:
-        left, top, right, bottom = win32gui.GetWindowRect(self.window_handle)
-        win32gui.ShowWindow(self.window_handle, win32con.SW_RESTORE)
+    def __prepare_wechat_window(self) -> None:
+        """Restore, maximize and focus the WeChat main window."""
+        win32gui.ShowWindow(self.window_handle, win32con.SW_MAXIMIZE)
+        time.sleep(Interval.BASE_INTERVAL * 2)
         try:
             win32gui.SetForegroundWindow(self.window_handle)
-        except Exception:
-            pass
-        scale = ctypes.windll.user32.GetDpiForWindow(self.window_handle) / 96
+        except pywintypes.error:
+            log_exception(logger, 'set_foreground_window_failed', window_handle=self.window_handle)
+        time.sleep(Interval.BASE_INTERVAL * 2)
+
+    def __activate_wechat_tab(self) -> None:
+        self.__prepare_wechat_window()
+        left, top, right, bottom = win32gui.GetWindowRect(self.window_handle)
+        scale = get_window_dpi_scale(self.window_handle)
         auto.Click(
             x=left + int(WeChat.CHAT_TAB_X * scale),
             y=top + int(WeChat.CHAT_TAB_Y * scale)
@@ -138,7 +203,24 @@ class WxOperation:
         title_text = normalize_ocr_text(title)
         if target_text not in title_text:
             similarity = SequenceMatcher(None, target_text, title_text).ratio()
-            if len(target_text) < 4 or similarity < 0.6:
+            suffix_similarity = 0.0
+            if len(target_text) >= 4 and len(title_text) >= 2:
+                for suffix_length in range(2, min(len(target_text), len(title_text) + 1) + 1):
+                    fragment = target_text[-suffix_length:]
+                    suffix_similarity = max(
+                        suffix_similarity,
+                        SequenceMatcher(None, fragment, title_text).ratio()
+                    )
+            log_event(
+                logger,
+                logging.WARNING,
+                'chat_title_mismatch',
+                recipient=name,
+                ocr_title=title,
+                similarity=round(similarity, 3),
+                suffix_similarity=round(suffix_similarity, 3)
+            )
+            if len(target_text) < 4 or (similarity < 0.6 and suffix_similarity < 0.75):
                 self.wx_window.SendKeys(text='{Esc}', waitTime=Interval.BASE_INTERVAL)
                 raise NameError(f'昵称不匹配: OCR={title}, 目标={name}')
 
@@ -151,9 +233,10 @@ class WxOperation:
         again before the input box is focused.
         """
         for attempt in range(2):
+            log_event(logger, logging.INFO, 'chat_search_attempt', recipient=name, attempt=attempt + 1)
             self.__activate_wechat_tab()
             left, top, right, bottom = win32gui.GetWindowRect(self.window_handle)
-            scale = ctypes.windll.user32.GetDpiForWindow(self.window_handle) / 96
+            scale = get_window_dpi_scale(self.window_handle)
             for _ in range(2):
                 auto.Click(
                     x=left + int(WeChat.SEARCH_BOX_X * scale),
@@ -177,7 +260,15 @@ class WxOperation:
                 self.__verify_current_chat(name=name)
                 self.__click_chat_input()
                 return True
-            except (NameError, RuntimeError):
+            except (NameError, RuntimeError) as error:
+                log_event(
+                    logger,
+                    logging.WARNING,
+                    'chat_verify_failed',
+                    recipient=name,
+                    attempt=attempt + 1,
+                    error=f'{type(error).__name__}: {error}'
+                )
                 if attempt == 1:
                     raise
                 time.sleep(Interval.BASE_INTERVAL * 5)
@@ -205,6 +296,7 @@ class WxOperation:
         search_window = auto.WindowControl(ClassName=WeChat.SEARCH_WINDOW_CLASSNAME)
         if not search_window.Exists(Interval.MAX_SEARCH_SECOND,
                                     searchIntervalSeconds=Interval.MAX_SEARCH_INTERVAL):
+            log_event(logger, logging.WARNING, 'search_window_missing', recipient=name)
             self.wx_window.SendKeys(text='{Esc}', waitTime=Interval.BASE_INTERVAL)
             return False
 
@@ -222,10 +314,12 @@ class WxOperation:
                     if node.Name == name:
                         node.Click(simulateMove=False)
                         time.sleep(Interval.BASE_INTERVAL * 2)
+                        log_event(logger, logging.INFO, 'contact_search_matched', recipient=name)
                         return True
             time.sleep(Interval.BASE_INTERVAL)
 
         # 无匹配用户, 取消搜索框
+        log_event(logger, logging.WARNING, 'contact_search_no_match', recipient=name)
         self.wx_window.SendKeys(text='{Esc}', waitTime=Interval.BASE_INTERVAL)
         return False
 
@@ -245,6 +339,7 @@ class WxOperation:
             time.sleep(Interval.BASE_INTERVAL * 5)
             self.wx_window.SendKey(key=auto.SpecialKeyNames['ENTER'], waitTime=Interval.BASE_INTERVAL)
             self.wx_window.SendKey(key=auto.SpecialKeyNames['ENTER'], waitTime=Interval.BASE_INTERVAL)
+            log_event(logger, logging.INFO, 'at_everyone_sent', group_name=group_chat_name)
             return
         # 个人 定位 聊天框，取 foundIndex=2，因为左侧聊天List 也可以匹配到foundIndex=1
         # 群聊 定位 聊天框 需要带上群人数，故会匹配失败，所以匹配失败的就是群聊
@@ -255,12 +350,14 @@ class WxOperation:
             self.input_edit.SendKeys(text='{Shift}2', waitTime=Interval.BASE_INTERVAL)
             everyone = self.wx_window.ListItemControl(Name='所有人')
             if not everyone.Exists(Interval.MAX_SEARCH_SECOND, searchIntervalSeconds=Interval.MAX_SEARCH_INTERVAL):
+                log_event(logger, logging.WARNING, 'at_everyone_option_missing', group_name=group_chat_name)
                 self.input_edit.SendKeys(text='{Ctrl}A', waitTime=Interval.BASE_INTERVAL)
                 self.input_edit.SendKeys(text='{Delete}', waitTime=Interval.BASE_INTERVAL)
                 return
             self.input_edit.SendKeys(text='{Up}', waitTime=Interval.BASE_INTERVAL)
             self.input_edit.SendKeys(text='{Enter}', waitTime=Interval.BASE_INTERVAL)
             self.input_edit.SendKeys(text='{Enter}', waitTime=Interval.BASE_INTERVAL)
+            log_event(logger, logging.INFO, 'at_everyone_sent', group_name=group_chat_name)
 
     def __send_text(self, *msgs, wait_time, send_shortcut) -> None:
         """
@@ -276,7 +373,7 @@ class WxOperation:
             None
         """
 
-        for msg in msgs:
+        for index, msg in enumerate(msgs):
             assert msg, "发送的文本内容为空"
             if self.is_qt_window:
                 self.__click_chat_input()
@@ -298,6 +395,7 @@ class WxOperation:
 
             # 设置到剪切板再黏贴到输入框
             self.wx_window.SendKeys(text=f'{send_shortcut}', waitTime=wait_time * 2)
+            log_event(logger, logging.DEBUG, 'text_message_sent', message_index=index, text_length=len(msg))
 
     def __send_file(self, *file_paths, wait_time, send_shortcut) -> None:
         """
@@ -312,17 +410,21 @@ class WxOperation:
             None
         """
         # 复制文件到剪切板
-        if copy_files_to_clipboard(file_paths=file_paths):
-            # 粘贴到输入框
-            if self.is_qt_window:
-                self.__click_chat_input()
-                self.wx_window.SendKeys(text='{Ctrl}v', waitTime=wait_time)
-            else:
-                self.input_edit.SendKeys(text='{Ctrl}V', waitTime=wait_time)
-            # 按下回车键
-            self.wx_window.SendKeys(text=f'{send_shortcut}', waitTime=wait_time / 2)
+        file_names = [os.path.basename(file_path) for file_path in file_paths]
+        if not copy_files_to_clipboard(file_paths=file_paths):
+            log_event(logger, logging.ERROR, 'clipboard_file_copy_failed', files=file_names)
+            raise RuntimeError(f'无法将文件复制到剪切板: {", ".join(file_names)}')
+        # 粘贴到输入框
+        if self.is_qt_window:
+            self.__click_chat_input()
+            self.wx_window.SendKeys(text='{Ctrl}v', waitTime=wait_time)
+        else:
+            self.input_edit.SendKeys(text='{Ctrl}V', waitTime=wait_time)
+        # 按下回车键
+        self.wx_window.SendKeys(text=f'{send_shortcut}', waitTime=wait_time / 2)
+        log_event(logger, logging.INFO, 'file_message_sent', files=file_names)
 
-            time.sleep(wait_time)  # 等待发送动作完成
+        time.sleep(wait_time)  # 等待发送动作完成
 
     def get_friend_list(self, tag: str = None) -> list:
         """
@@ -434,18 +536,43 @@ class WxOperation:
             class_name_prefix=WeChat.QT_WINDOW_CLASSNAME_PREFIX
         )
         if existing:
-            return existing, False
+            left, top, right, bottom = win32gui.GetWindowRect(existing)
+            if right - left >= 300 and bottom - top >= 300:
+                log_event(
+                    logger,
+                    logging.INFO,
+                    'contact_manager_reused',
+                    window_handle=existing,
+                    width=right - left,
+                    height=bottom - top
+                )
+                return existing, False
 
+        self.__prepare_wechat_window()
         left, top, right, bottom = win32gui.GetWindowRect(self.window_handle)
-        scale = ctypes.windll.user32.GetDpiForWindow(self.window_handle) / 96
+        scale = get_window_dpi_scale(self.window_handle)
+        contact_tab_x = left + int(WeChat.CONTACT_TAB_X * scale)
+        contact_tab_y = top + int(WeChat.CONTACT_TAB_Y * scale)
+        manager_button_x = left + int(WeChat.CONTACT_MANAGER_BUTTON_X * scale)
+        manager_button_y = top + int(WeChat.CONTACT_MANAGER_BUTTON_Y * scale)
+        log_event(
+            logger,
+            logging.INFO,
+            'contact_manager_click',
+            window_handle=self.window_handle,
+            window_rect=(left, top, right, bottom),
+            scale=round(scale, 3),
+            contact_tab=(contact_tab_x, contact_tab_y),
+            manager_button=(manager_button_x, manager_button_y)
+        )
         auto.Click(
-            x=left + int(WeChat.CONTACT_TAB_X * scale),
-            y=top + int(WeChat.CONTACT_TAB_Y * scale)
+            x=contact_tab_x,
+            y=contact_tab_y
         )
         time.sleep(Interval.BASE_INTERVAL * 8)
         auto.Click(
-            x=left + int(WeChat.CONTACT_MANAGER_BUTTON_X * scale),
-            y=top + int(WeChat.CONTACT_MANAGER_BUTTON_Y * scale)
+            x=manager_button_x,
+            y=manager_button_y
         )
         deadline = time.time() + WeChat.WINDOW_LAUNCH_SECOND
         while time.time() < deadline:
@@ -467,13 +594,20 @@ class WxOperation:
         return compact
 
     def __read_group_names_qt(self, window_handle: int) -> list[str]:
-        lines = read_window_text_lines(
+        left, top, right, bottom = win32gui.GetWindowRect(window_handle)
+        scale = get_window_dpi_scale(window_handle)
+        region_left = int(WeChat.GROUP_LIST_LEFT * scale)
+        region_top = int(WeChat.GROUP_LIST_TOP * scale)
+        region_width = (right - left) - region_left - int(WeChat.GROUP_LIST_RIGHT_MARGIN * scale)
+        region_height = (bottom - top) - region_top - int(WeChat.GROUP_LIST_BOTTOM_MARGIN * scale)
+        lines = read_window_region(
             window_handle=window_handle,
-            crop_left_fraction=WeChat.GROUP_LIST_CROP_LEFT,
-            crop_top_fraction=WeChat.GROUP_LIST_CROP_TOP,
-            crop_width_fraction=WeChat.GROUP_LIST_CROP_WIDTH,
-            crop_height_fraction=WeChat.GROUP_LIST_CROP_HEIGHT,
-            allow_empty=True
+            left=region_left,
+            top=region_top,
+            width=region_width,
+            height=region_height,
+            allow_empty=True,
+            debug_name='wechat-mass-tool-group-crop.png'
         )
         names = list()
         ignored = {'通讯录管理', '全部', '朋友权限', '标签', '最近群聊', '筛选'}
@@ -484,6 +618,15 @@ class WxOperation:
             if re.fullmatch(r'[0-9O○Q]+', name):
                 continue
             names.append(name)
+        log_event(
+            logger,
+            logging.INFO,
+            'group_names_page',
+            window_handle=window_handle,
+            line_count=len(lines),
+            name_count=len(names),
+            sample=[line.text for line in lines[:6]]
+        )
         return list(dict.fromkeys(names))
 
     def __get_chat_group_name_list_qt(self) -> list:
@@ -497,14 +640,18 @@ class WxOperation:
         win32gui.ShowWindow(manager_handle, win32con.SW_RESTORE)
         try:
             win32gui.SetForegroundWindow(manager_handle)
-        except Exception:
-            pass
+        except pywintypes.error:
+            log_exception(logger, 'set_foreground_window_failed', window_handle=manager_handle)
         time.sleep(Interval.BASE_INTERVAL * 5)
 
         group_names = self.__read_group_names_qt(window_handle=manager_handle)
         if not group_names:
             left, top, right, bottom = win32gui.GetWindowRect(manager_handle)
-            scale = ctypes.windll.user32.GetDpiForWindow(manager_handle) / 96
+            scale = get_window_dpi_scale(manager_handle)
+            save_window_screenshot(
+                window_handle=manager_handle,
+                name='wechat-mass-tool-group-window.png'
+            )
             auto.Click(
                 x=left + int(WeChat.RECENT_GROUPS_BUTTON_X * scale),
                 y=top + int(WeChat.RECENT_GROUPS_BUTTON_Y * scale)
@@ -522,8 +669,9 @@ class WxOperation:
             last_page = page_names
             all_names.extend(page_names)
             left, top, right, bottom = win32gui.GetWindowRect(manager_handle)
+            scale = get_window_dpi_scale(manager_handle)
             win32api.SetCursorPos((
-                left + int((right - left) * 0.15),
+                left + int((WeChat.GROUP_LIST_LEFT + 120) * scale),
                 top + int((bottom - top) * 0.75)
             ))
             auto.WheelDown(
@@ -542,7 +690,10 @@ class WxOperation:
         if created:
             win32gui.PostMessage(manager_handle, win32con.WM_CLOSE, 0, 0)
         self.wx_window.SetTopmost(isTopmost=False)
-        return list(dict.fromkeys(all_names))
+        result = list(dict.fromkeys(all_names))
+        if not result:
+            raise RuntimeError('未能读取到群聊名单，请确认微信已登录且通讯录管理窗口可见')
+        return result
 
     def get_group_chat_list(self) -> list:
         """获取群聊通讯录中的用户名称"""
@@ -596,28 +747,51 @@ class WxOperation:
         if file_paths and not isinstance(file_paths, Iterable):
             raise TypeError("发送的文件路径必须是可迭代的")
 
+        if file_paths and not isinstance(file_paths, list):
+            file_paths = list(file_paths)
+
+        log_event(
+            logger,
+            logging.INFO,
+            'message_send_started',
+            recipient=name,
+            text_count=len(msgs) if isinstance(msgs, (list, tuple)) else None,
+            file_count=len(file_paths) if file_paths else 0,
+            add_remark_name=add_remark_name,
+            at_everyone=at_everyone,
+            text_interval=text_interval,
+            file_interval=file_interval,
+            send_shortcut=send_shortcut
+        )
+
         # 如果当前面板已经是需发送好友, 则无需再次搜索跳转
-        if not self.__match_nickname(name=name):
+        chat_already_open = self.__match_nickname(name=name)
+        if not chat_already_open:
             if not self.__goto_chat_box(name=name):
                 raise NameError('昵称不匹配')
+        log_event(logger, logging.INFO, 'chat_ready', recipient=name, already_open=chat_already_open)
 
         # 设置输入框为当前焦点
         if not self.is_qt_window:
+            input_source = 'automation_id_and_class_name'
             self.input_edit = self.wx_window.EditControl(
                 AutomationId=WeChat.INPUT_AUTOMATION_ID,
                 ClassName=WeChat.INPUT_CLASS_NAME
             )
             if not self.input_edit.Exists(Interval.MAX_SEARCH_SECOND,
                                           searchIntervalSeconds=Interval.MAX_SEARCH_INTERVAL):
+                input_source = 'automation_id'
                 self.input_edit = self.wx_window.EditControl(
                     AutomationId=WeChat.INPUT_AUTOMATION_ID
                 )
             if not self.input_edit.Exists(Interval.MAX_SEARCH_SECOND,
                                           searchIntervalSeconds=Interval.MAX_SEARCH_INTERVAL):
+                input_source = 'name'
                 self.input_edit = self.wx_window.EditControl(Name=name)
             if not self.input_edit.Exists(Interval.MAX_SEARCH_SECOND,
                                           searchIntervalSeconds=Interval.MAX_SEARCH_INTERVAL):
                 raise LookupError('找不到微信聊天输入框')
+            log_event(logger, logging.DEBUG, 'chat_input_located', recipient=name, source=input_source)
             self.input_edit.SetFocus()
 
         # @所有人
@@ -631,14 +805,38 @@ class WxOperation:
         if msgs and add_remark_name:
             new_msgs = deepcopy(list(msgs))
             new_msgs.insert(0, name)
+            log_event(
+                logger,
+                logging.INFO,
+                'text_send_started',
+                recipient=name,
+                message_count=len(new_msgs),
+                with_remark=True
+            )
             self.__send_text(*new_msgs, wait_time=text_interval, send_shortcut=send_shortcut)
         elif msgs:
+            log_event(
+                logger,
+                logging.INFO,
+                'text_send_started',
+                recipient=name,
+                message_count=len(msgs) if isinstance(msgs, (list, tuple)) else None,
+                with_remark=False
+            )
             self.__send_text(*msgs, wait_time=text_interval, send_shortcut=send_shortcut)
         if file_paths:
+            log_event(
+                logger,
+                logging.INFO,
+                'file_send_started',
+                recipient=name,
+                files=[os.path.basename(file_path) for file_path in file_paths]
+            )
             self.__send_file(*file_paths, wait_time=file_interval, send_shortcut=send_shortcut)
 
         # 取消微信窗口置顶
         self.wx_window.SetTopmost(isTopmost=False)
+        log_event(logger, logging.INFO, 'message_sent', recipient=name)
 
 
 if __name__ == '__main__':

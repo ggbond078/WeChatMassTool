@@ -1,5 +1,5 @@
 QWidget {
-    color: #E6EDF5;
+    color: #E2E8F0;
     font: 10pt "Microsoft YaHei UI";
 }
 
@@ -9,33 +9,33 @@ QWidget#styleSheet {
 }
 
 QToolTip {
-    background-color: #121A23;
-    border: 1px solid #2B3D50;
+    background-color: #111C2E;
+    border: 1px solid #334155;
     border-left: 2px solid #22C55E;
-    color: #E6EDF5;
+    color: #E2E8F0;
     padding: 6px 8px;
 }
 
 #bgApp {
-    background-color: #0B1015;
-    border: 1px solid #1E2A38;
+    background-color: #0B1220;
+    border: 1px solid #1E293B;
 }
 
 #leftMenuBg {
-    background-color: #0F161E;
-    border-right: 1px solid #1E2A38;
+    background-color: #0F172A;
+    border-right: 1px solid #1E293B;
 }
 
 #topLogo {
-    background-color: #173A26;
+    background-color: #12291D;
     background-image: url(:/images/images/WeChatMass.png);
     background-position: center;
     background-repeat: no-repeat;
-    border-radius: 12px;
+    border-radius: 10px;
 }
 
 #titleLeftApp {
-    color: #F1F5F9;
+    color: #F8FAFC;
     font: 600 12pt "Microsoft YaHei UI";
 }
 
@@ -60,14 +60,14 @@ QToolTip {
 #topMenu QPushButton:hover,
 #bottomMenu QPushButton:hover,
 #toggleButton:hover {
-    background-color: #16212C;
-    color: #E6EDF5;
+    background-color: #162033;
+    color: #E2E8F0;
 }
 
 #topMenu QPushButton:pressed,
 #bottomMenu QPushButton:pressed,
 #toggleButton:pressed {
-    background-color: #1A2D22;
+    background-color: #1B2940;
 }
 
 #topMenu QPushButton[compact="true"],
@@ -84,23 +84,23 @@ QToolTip {
     background-repeat: no-repeat;
     border: 1px solid transparent;
     border-radius: 10px;
-    color: #7C8FA3;
+    color: #64748B;
     font: 600 10pt "Microsoft YaHei UI";
     padding-left: 14px;
     text-align: left;
 }
 
 #leftMenuFrame {
-    border-top: 1px solid #1E2A38;
+    border-top: 1px solid #1E293B;
 }
 
 #contentTopBg {
-    background-color: #0F161E;
-    border-bottom: 1px solid #1E2A38;
+    background-color: #0F172A;
+    border-bottom: 1px solid #1E293B;
 }
 
 #titleRightInfo {
-    color: #E6EDF5;
+    color: #E2E8F0;
     padding-left: 4px;
 }
 
@@ -111,14 +111,14 @@ QToolTip {
 #closeAppBtn {
     background-color: transparent;
     border: 1px solid transparent;
-    border-radius: 8px;
+    border-radius: 6px;
 }
 
 #rightButtons .QPushButton:hover,
 #settingsTopBtn:hover,
 #minimizeAppBtn:hover,
 #maximizeRestoreAppBtn:hover {
-    background-color: #16212C;
+    background-color: #162033;
 }
 
 #closeAppBtn:hover {
@@ -126,16 +126,16 @@ QToolTip {
 }
 
 #pagesContainer {
-    background-color: #0B1015;
+    background-color: #0B1220;
 }
 
 #bottomBar {
-    background-color: #0F161E;
-    border-top: 1px solid #1E2A38;
+    background-color: #0F172A;
+    border-top: 1px solid #1E293B;
 }
 
 #bottomBar QLabel {
-    color: #7C8FA3;
+    color: #64748B;
     font-size: 9pt;
     padding-left: 12px;
     padding-right: 12px;
@@ -148,33 +148,33 @@ QToolTip {
 
 #SettingsSheet {
     background: #111A24;
-    border: 1px solid #223041;
-    border-radius: 20px;
+    border: 1px solid #24324A;
+    border-radius: 10px;
 }
 
 #extraTopBg {
     background: transparent;
-    border-bottom: 1px solid #1E2A38;
+    border-bottom: 1px solid #1E293B;
 }
 
 #extraLabel {
-    color: #F1F5F9;
+    color: #F8FAFC;
     font: 700 13pt "Microsoft YaHei UI";
 }
 
 #SettingsSubtitle {
-    color: #7C8FA3;
+    color: #64748B;
     font-size: 8.5pt;
 }
 
 #extraCloseColumnBtn {
     background-color: transparent;
     border: none;
-    border-radius: 8px;
+    border-radius: 6px;
 }
 
 #extraCloseColumnBtn:hover {
-    background-color: #16212C;
+    background-color: #162033;
 }
 
 #extraContent,
@@ -190,44 +190,44 @@ QToolTip {
 }
 
 #SettingsDivider {
-    background: #1E2A38;
+    background: #1E293B;
     border: none;
 }
 
 #Card {
-    background-color: #121A23;
-    border: 1px solid #223041;
-    border-radius: 16px;
+    background-color: #111C2E;
+    border: 1px solid #24324A;
+    border-radius: 10px;
 }
 
 #HeroCard {
-    background-color: #10231A;
+    background-color: #0F1F1A;
     border: 1px solid #1F4D36;
-    border-radius: 20px;
+    border-radius: 10px;
 }
 
 #HeroMark {
-    background-color: #173A26;
-    border: 1px solid #245C3A;
-    border-radius: 32px;
+    background-color: #12291D;
+    border: 1px solid #1F4D36;
+    border-radius: 10px;
 }
 
 #StatCard {
-    background-color: #121A23;
-    border: 1px solid #223041;
-    border-radius: 14px;
+    background-color: #111C2E;
+    border: 1px solid #24324A;
+    border-radius: 10px;
 }
 
 #StepCard {
-    background-color: #101821;
-    border: 1px solid #1E2A38;
-    border-radius: 14px;
+    background-color: #0E1726;
+    border: 1px solid #1E293B;
+    border-radius: 10px;
 }
 
 #ContactImportPanel {
-    background: #101821;
-    border: 1px dashed #2B3D50;
-    border-radius: 20px;
+    background: #0E1726;
+    border: 1px dashed #334155;
+    border-radius: 10px;
 }
 
 #ContactActionList {
@@ -238,28 +238,28 @@ QToolTip {
 #ContactActionRow {
     background: transparent;
     border: none;
-    border-radius: 12px;
+    border-radius: 10px;
 }
 
 #ContactActionRow:hover {
-    background: #101821;
+    background: #0E1726;
 }
 
 #ContactIcon {
-    background: #173A26;
-    border: 1px solid #245C3A;
-    border-radius: 14px;
+    background: #12291D;
+    border: 1px solid #1F4D36;
+    border-radius: 10px;
 }
 
 #ContactDivider {
-    background: #1E2A38;
+    background: #1E293B;
     border: none;
 }
 
 #InfoPill {
-    background-color: #173A26;
-    border: 1px solid #245C3A;
-    border-radius: 12px;
+    background-color: #12291D;
+    border: 1px solid #1F4D36;
+    border-radius: 10px;
     color: #4ADE80;
     font: 600 9pt "Microsoft YaHei UI";
     padding: 7px 12px;
@@ -271,38 +271,38 @@ QToolTip {
 }
 
 #HeroTitle {
-    color: #F1F7F3;
+    color: #F8FAFC;
     font: 700 26pt "Microsoft YaHei UI";
 }
 
 #HeroText {
-    color: #A7B8AE;
+    color: #94A3B8;
     font-size: 10.5pt;
 }
 
 #PageTitle {
-    color: #F1F5F9;
+    color: #F8FAFC;
     font: 700 17pt "Microsoft YaHei UI";
 }
 
 #PageHint {
-    color: #8FA1B3;
+    color: #94A3B8;
     font-size: 9.5pt;
 }
 
 #SectionTitle {
-    color: #E6EDF5;
+    color: #E2E8F0;
     font: 700 12pt "Microsoft YaHei UI";
     padding-top: 4px;
 }
 
 #CardTitle {
-    color: #E6EDF5;
+    color: #E2E8F0;
     font: 700 11.5pt "Microsoft YaHei UI";
 }
 
 #CardHint {
-    color: #7C8FA3;
+    color: #64748B;
     font-size: 8.5pt;
 }
 
@@ -315,7 +315,7 @@ QToolTip {
 }
 
 #StatCaption {
-    color: #8FA1B3;
+    color: #94A3B8;
     font-size: 9pt;
 }
 
@@ -325,7 +325,7 @@ QToolTip {
 }
 
 #StepTitle {
-    color: #E6EDF5;
+    color: #E2E8F0;
     font: 700 11pt "Microsoft YaHei UI";
 }
 
@@ -335,7 +335,7 @@ QToolTip {
 }
 
 #FieldLabel {
-    color: #C8D4E0;
+    color: #CBD5E1;
     font: 600 9.5pt "Microsoft YaHei UI";
 }
 
@@ -348,10 +348,10 @@ QLineEdit,
 QTextEdit,
 QListWidget,
 QComboBox {
-    background-color: #0C131A;
-    border: 1px solid #223041;
+    background-color: #0B1524;
+    border: 1px solid #334155;
     border-radius: 10px;
-    color: #E6EDF5;
+    color: #E2E8F0;
     padding: 8px 10px;
     selection-background-color: #22C55E;
     selection-color: #052E16;
@@ -361,7 +361,7 @@ QLineEdit:hover,
 QTextEdit:hover,
 QListWidget:hover,
 QComboBox:hover {
-    border-color: #2B3D50;
+    border-color: #475569;
 }
 
 QLineEdit:focus,
@@ -381,25 +381,25 @@ QListWidget::item {
 }
 
 QListWidget::item:selected {
-    background-color: #173A26;
+    background-color: #12291D;
     color: #4ADE80;
 }
 
 QComboBox QAbstractItemView {
-    background-color: #121A23;
-    border: 1px solid #2B3D50;
-    border-radius: 8px;
-    color: #E6EDF5;
+    background-color: #111C2E;
+    border: 1px solid #334155;
+    border-radius: 6px;
+    color: #E2E8F0;
     padding: 6px;
-    selection-background-color: #173A26;
+    selection-background-color: #12291D;
     selection-color: #4ADE80;
 }
 
 QProgressBar {
-    background-color: #0C131A;
-    border: 1px solid #223041;
-    border-radius: 7px;
-    color: #C8D4E0;
+    background-color: #0B1524;
+    border: 1px solid #24324A;
+    border-radius: 6px;
+    color: #CBD5E1;
     font-size: 8.5pt;
     text-align: center;
 }
@@ -410,12 +410,12 @@ QProgressBar::chunk {
 }
 
 QRadioButton {
-    color: #C8D4E0;
+    color: #CBD5E1;
     spacing: 8px;
 }
 
 QRadioButton::indicator {
-    background-color: #0C131A;
+    background-color: #0B1524;
     border: 1px solid #334155;
     border-radius: 9px;
     height: 18px;
@@ -428,14 +428,14 @@ QRadioButton::indicator:hover {
 
 QRadioButton::indicator:checked {
     background-color: #22C55E;
-    border: 3px solid #0C131A;
+    border: 3px solid #0B1524;
 }
 
 QCheckBox[role="chip"] {
     background: transparent;
-    border: 1px solid #2B3D50;
-    border-radius: 18px;
-    color: #C8D4E0;
+    border: 1px solid #334155;
+    border-radius: 10px;
+    color: #CBD5E1;
     font: 600 9pt "Microsoft YaHei UI";
     padding: 7px 14px;
     spacing: 0px;
@@ -447,19 +447,19 @@ QCheckBox[role="chip"]::indicator {
 }
 
 QCheckBox[role="chip"]:hover {
-    background: #16212C;
-    border-color: #3A4E63;
-    color: #E6EDF5;
+    background: #162033;
+    border-color: #475569;
+    color: #E2E8F0;
 }
 
 QCheckBox[role="chip"]:checked {
-    background: #173A26;
-    border-color: #245C3A;
+    background: #12291D;
+    border-color: #1F4D36;
     color: #4ADE80;
 }
 
 QCheckBox[role="chip"]:checked:hover {
-    background: #1D4A30;
+    background: #173524;
 }
 
 QPushButton[role="primary"] {
@@ -472,8 +472,8 @@ QPushButton[role="primary"] {
 }
 
 QPushButton[role="primary"]:hover {
-    background: #35D36F;
-    border-color: #35D36F;
+    background: #34D399;
+    border-color: #34D399;
 }
 
 QPushButton[role="primary"]:pressed {
@@ -483,30 +483,30 @@ QPushButton[role="primary"]:pressed {
 
 QPushButton[role="secondary"] {
     background: transparent;
-    border: 1px solid #2B3D50;
+    border: 1px solid #334155;
     border-radius: 10px;
-    color: #D7E3EE;
+    color: #CBD5E1;
     font: 600 9.5pt "Microsoft YaHei UI";
     padding: 8px 14px;
 }
 
 QPushButton[role="secondary"]:hover {
-    background: #16212C;
-    border-color: #3A4E63;
+    background: #162033;
+    border-color: #475569;
 }
 
 QPushButton[role="ghost"] {
     background: transparent;
     border: 1px solid transparent;
     border-radius: 10px;
-    color: #8FA1B3;
+    color: #94A3B8;
     font: 600 9.5pt "Microsoft YaHei UI";
     padding: 8px 12px;
 }
 
 QPushButton[role="ghost"]:hover {
-    background: #16212C;
-    color: #E6EDF5;
+    background: #162033;
+    color: #E2E8F0;
 }
 
 #PrimaryButton,
@@ -521,8 +521,8 @@ QPushButton[role="ghost"]:hover {
 
 #PrimaryButton:hover,
 #btn_send_msg:hover {
-    background: #35D36F;
-    border-color: #35D36F;
+    background: #34D399;
+    border-color: #34D399;
 }
 
 #PrimaryButton:pressed,
@@ -537,9 +537,9 @@ QPushButton[role="ghost"]:hover {
 #btn_add_file,
 #btn_import_name_list {
     background: transparent;
-    border: 1px solid #2B3D50;
+    border: 1px solid #334155;
     border-radius: 10px;
-    color: #D7E3EE;
+    color: #CBD5E1;
     font: 600 9.5pt "Microsoft YaHei UI";
     padding: 8px 14px;
 }
@@ -549,8 +549,8 @@ QPushButton[role="ghost"]:hover {
 #btn_export_result:hover,
 #btn_add_file:hover,
 #btn_import_name_list:hover {
-    background: #16212C;
-    border-color: #3A4E63;
+    background: #162033;
+    border-color: #475569;
 }
 
 #GhostButton,
@@ -563,7 +563,7 @@ QPushButton[role="ghost"]:hover {
     background: transparent;
     border: 1px solid transparent;
     border-radius: 10px;
-    color: #8FA1B3;
+    color: #94A3B8;
     font: 600 9.5pt "Microsoft YaHei UI";
     padding: 8px 12px;
 }
@@ -575,8 +575,8 @@ QPushButton[role="ghost"]:hover {
 #btn_clear_all:hover,
 #btn_export_name_list:hover,
 #btn_export_chat_group_name_list:hover {
-    background: #16212C;
-    color: #E6EDF5;
+    background: #162033;
+    color: #E2E8F0;
 }
 
 QScrollArea {
@@ -601,7 +601,7 @@ QScrollBar:vertical {
 
 QScrollBar::handle:horizontal,
 QScrollBar::handle:vertical {
-    background: #2B3D50;
+    background: #334155;
     border-radius: 4px;
     min-height: 24px;
     min-width: 24px;
@@ -609,7 +609,7 @@ QScrollBar::handle:vertical {
 
 QScrollBar::handle:horizontal:hover,
 QScrollBar::handle:vertical:hover {
-    background: #3A4E63;
+    background: #475569;
 }
 
 QScrollBar::add-line,
@@ -621,5 +621,60 @@ QScrollBar::sub-page {
 }
 
 QMessageBox {
-    background-color: #121A23;
+    background-color: #111C2E;
+}
+QComboBox::drop-down {
+    border: none;
+    width: 24px;
+}
+
+QCheckBox {
+    color: #CBD5E1;
+    spacing: 8px;
+}
+
+QCheckBox::indicator {
+    background-color: #0B1524;
+    border: 1px solid #475569;
+    border-radius: 4px;
+    height: 14px;
+    width: 14px;
+}
+
+QCheckBox::indicator:hover {
+    border-color: #22C55E;
+}
+
+QCheckBox::indicator:checked {
+    background-color: #22C55E;
+    border-color: #22C55E;
+}
+
+QMenu {
+    background-color: #111C2E;
+    border: 1px solid #24324A;
+    border-radius: 6px;
+    color: #E2E8F0;
+    padding: 4px;
+}
+
+QMenu::item {
+    background: transparent;
+    border-radius: 4px;
+    padding: 6px 12px;
+}
+
+QMenu::item:selected {
+    background-color: #162033;
+    color: #4ADE80;
+}
+
+QMenu::separator {
+    background: #1E293B;
+    height: 1px;
+    margin: 4px 8px;
+}
+
+QMessageBox QLabel {
+    color: #E2E8F0;
 }

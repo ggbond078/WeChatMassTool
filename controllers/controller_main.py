@@ -2,18 +2,22 @@
 # Name:         controller_main.py
 # Date:         2024/04/01 00:00
 # Description:
+import logging
 from copy import deepcopy
 
-from PySide6.QtCore import (QObject, QMutexLocker, QMutex, QWaitCondition, Slot)
-from PySide6.QtWidgets import (QFileDialog, QMessageBox)
+from PySide2.QtCore import (QObject, QMutexLocker, QMutex, QWaitCondition, Slot)
+from PySide2.QtWidgets import (QFileDialog, QMessageBox)
 
 from config import (Animate, WeChat, WeChatUpdate, TUTORIAL_LINK)
 from models import ModelMain
 from utils import (
     read_file, write_file, get_config, write_config, get_file_sha256, get_temp_file_path, path_exists, delete_file,
-    join_path, open_webpage, disable_wechat_auto_update, enable_wechat_auto_update
+    join_path, open_webpage, disable_wechat_auto_update, enable_wechat_auto_update, log_event, log_exception,
+    open_log_directory
 )
 from views import ViewMain
+
+logger = logging.getLogger(__name__)
 
 
 class ControllerMain(QObject):
@@ -55,6 +59,8 @@ class ControllerMain(QObject):
         self.view.btn_export_chat_group_name_list.clicked.connect(self.export_chat_group_name_list)
         # 导出运行结果
         self.view.btn_export_result.clicked.connect(self.export_exec_result)
+        # 打开日志目录
+        self.view.btn_open_log_dir.clicked.connect(self.on_open_log_dir_clicked)
         # 添加 文件 QListWidget 控件右键菜单
         self.view.add_list_widget_menu()
         # 进度条, 导出按钮, 显示信息栏, 缓存进度, 删除缓存进度,的 Signal
@@ -147,10 +153,25 @@ class ControllerMain(QObject):
     def on_send_clicked(self):
         """点击发送按钮触发的事件"""
         data = self.get_gui_info()
-        print(data)
 
         if cache_index := self.get_name_list_file_cache_index():
             data['cache_index'] = cache_index
+        log_event(
+            logger,
+            logging.INFO,
+            'send_configuration',
+            name_list_count=len(data['name_list']),
+            pasted_name_count=len(data['names'].split('\n')) if data['names'] else 0,
+            single_line_count=len(data['single_text'].split('\n')) if data['single_text'] else 0,
+            multi_line_count=1 if data['multi_text'] else 0,
+            file_count=len(data['file_paths']),
+            add_remark_name=data['add_remark_name'],
+            at_everyone=data['at_everyone'],
+            text_interval=data['text_interval'],
+            file_interval=data['file_interval'],
+            send_shortcut=data['send_shortcut'],
+            cache_index=data.get('cache_index', 0)
+        )
 
         self.model.send_wechat_message(
             data,
@@ -181,6 +202,14 @@ class ControllerMain(QObject):
         if file_path := QFileDialog.getSaveFileName(self.view, "Create File", "运行结果.csv", "CSV Files (*.csv)")[0]:
             res = self.model.record.export_exec_result_to_csv(file_path)
             icon = QMessageBox.Information if res.get('status') else QMessageBox.Critical
+            log_event(
+                logger,
+                logging.INFO if res.get('status') else logging.WARNING,
+                'exec_result_exported',
+                file_path=file_path,
+                status=res.get('status'),
+                tip=res.get('tip')
+            )
             self.view.show_message_box(res.get('tip'), icon, duration=3000)
         else:
             self.view.show_message_box('导出失败!', QMessageBox.Critical, duration=3000)
@@ -271,7 +300,26 @@ class ControllerMain(QObject):
     @Slot(bool, str)
     def show_infobar(self, status, tip):
         icon_type = 'success' if status else 'fail'
+        log_event(
+            logger,
+            logging.INFO if status else logging.WARNING,
+            'infobar_shown',
+            status=status,
+            message=tip
+        )
         self.view.add_infobar(tip, icon_type)
+
+    @Slot()
+    def on_open_log_dir_clicked(self):
+        """打开程序日志目录"""
+        try:
+            open_log_directory(WeChat.APP_NAME)
+        except OSError:
+            log_exception(logger, 'open_log_directory_failed')
+            self.view.add_infobar(
+                r'打开日志目录失败，请手动访问 %LOCALAPPDATA%\WeChatMassTool\logs',
+                'fail'
+            )
 
     @Slot(str)
     def cache_progress(self, index):

@@ -4,7 +4,7 @@
 # Description:
 
 
-from PySide6.QtCore import Qt
+from PySide2.QtCore import Qt
 
 from views import (MainWindow, LoginWindow)
 from views.ui_components import (create_animation_group, create_opacity_animation)

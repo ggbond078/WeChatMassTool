@@ -6,9 +6,11 @@
 import sys
 from typing import (Tuple, Union)
 
-from PySide6.QtCore import (Qt, QTimer, QEvent, QPoint, QPropertyAnimation, QParallelAnimationGroup, Signal)
-from PySide6.QtGui import (QIcon, QAction)
-from PySide6.QtWidgets import (QMainWindow, QApplication, QSizeGrip, QPushButton, QMessageBox, QWidget)
+from PySide2.QtCore import (Qt, QTimer, QEvent, QPoint, QPropertyAnimation, QParallelAnimationGroup, Signal)
+from PySide2.QtGui import QIcon
+from PySide2.QtWidgets import (
+    QMainWindow, QApplication, QSizeGrip, QPushButton, QMessageBox, QWidget, QAction
+)
 
 from config import (ViewConfig, DarkConfig, LightConfig)
 from views.ui_components import (
@@ -105,7 +107,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """应用一套完整主题样式。"""
         self.config = theme_config
         with open(get_resource_path(self.config.QSS_FILE), mode='r', encoding='utf-8') as file:
-            self.styleSheet.setStyleSheet(file.read())
+            stylesheet = file.read()
+        self.styleSheet.setStyleSheet('')
+        self.setStyleSheet(stylesheet)
         for widget_name, style in self.config.MANUAL_STYLES.items():
             widget = getattr(self, widget_name, None)
             widget.setStyleSheet(style)
@@ -141,8 +145,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def initialize_title(self):
         """设置title"""
         # 设置标题
-        title = "PyDracula - Modern GUI"
-        description = "PyDracula APP - Theme with colors based on Dracula for Python."
+        title = "WeChatMassTool"
+        description = "消息群发工作台"
         self.setWindowTitle(title)
         self.titleRightInfo.setText(description)
 
@@ -254,7 +258,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         # 获取触发当前动画的按钮 和 动画触发方向
         btn = self.sender()
-        direction = direction_map.get(btn.objectName())
+        direction = direction_map.get(btn.objectName()) if btn is not None else None
         left_style = self.toggleLeftBox.styleSheet()
         right_style = self.settingsTopBtn.styleSheet()
 
@@ -397,7 +401,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         msg_box.setIcon(icon)
         if duration:
             QTimer.singleShot(duration, msg_box.close)
-        msg_box.exec()
+        msg_box.exec_()
 
     def set_text_in_widget(self, object_name, text):
         """根据控件的 objectName 设置文本"""
@@ -458,7 +462,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def mousePressEvent(self, event):
         """鼠标点击事件"""
         if event.button() == Qt.LeftButton:
-            self.move_position = event.globalPosition().toPoint() - self.pos()
+            self.move_position = event.globalPos() - self.pos()
             event.accept()
 
     def resizeEvent(self, event):
@@ -482,4 +486,4 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 if __name__ == "__main__":
     app = QApplication()
     window = MainWindow()
-    sys.exit(app.exec())
+    sys.exit(app.exec_())

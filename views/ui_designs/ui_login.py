@@ -1,5 +1,5 @@
-from PySide6.QtCore import (QSize, QRect, QMetaObject)
-from PySide6.QtWidgets import (QWidget, QVBoxLayout, QFrame, QSpacerItem, QSizePolicy)
+from PySide2.QtCore import (QSize, QRect, QMetaObject)
+from PySide2.QtWidgets import (QWidget, QVBoxLayout, QFrame, QSpacerItem, QSizePolicy)
 
 from .resources_rc import *
 
@@ -12,9 +12,9 @@ class Ui_Login(object):
         Login.setMinimumSize(QSize(300, 420))
         Login.setMaximumSize(QSize(300, 420))
         Login.setStyleSheet(u"#bg {\n"
-                            "	background-color: #0B1015;\n"
-                            "	border: 1px solid #1E2A38;\n"
-                            "	border-radius: 20px;\n"
+                            "	background-color: #0B1220;\n"
+                            "	border: 1px solid #1E293B;\n"
+                            "	border-radius: 12px;\n"
                             "}\n"
                             "QLabel {\n"
                             "	color: #94A3B8;\n"
@@ -22,23 +22,23 @@ class Ui_Login(object):
                             "	padding-top: 20px;\n"
                             "}\n"
                             ".QLineEdit {\n"
-                            "	border: 1px solid #223041;\n"
-                            "	border-radius: 15px;\n"
-                            "	background-color: #121A23;\n"
-                            "	color: #94A3B8;\n"
+                            "	border: 1px solid #334155;\n"
+                            "	border-radius: 8px;\n"
+                            "	background-color: #111C2E;\n"
+                            "	color: #CBD5E1;\n"
                             "	padding-left: 10px;\n"
                             "	padding-right: 10px;\n"
                             "	background-repeat: none;\n"
                             "	background-position: left center;\n"
                             "}\n"
                             ".QLineEdit:hover {\n"
-                            "	color: #E6EDF5;\n"
-                            "	border: 1px solid #2B3D50;\n"
+                            "	color: #E2E8F0;\n"
+                            "	border: 1px solid #475569;\n"
                             "}\n"
                             ".QLineEdit:focus {\n"
-                            "	color: #E6EDF5;\n"
+                            "	color: #E2E8F0;\n"
                             "	border: 1px solid #22C55E;\n"
-                            "	background-color: #0C131A;\n"
+                            "	background-color: #0B1524;\n"
                             "}")
         self.centralwidget = QWidget(Login)
         self.centralwidget.setObjectName(u"centralwidget")

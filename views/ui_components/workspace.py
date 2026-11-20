@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-from PySide6.QtCore import QSize, Qt
-from PySide6.QtGui import QColor, QIcon, QPainter, QPixmap
-from PySide6.QtWidgets import (
+from PySide2.QtCore import QSize, Qt
+from PySide2.QtGui import QColor, QIcon, QPainter, QPixmap
+from PySide2.QtWidgets import (
     QFrame,
     QHBoxLayout,
     QCheckBox,
@@ -52,7 +52,7 @@ def _option_chip(text: str, object_name: str) -> QCheckBox:
     chip.setObjectName(object_name)
     chip.setProperty('role', 'chip')
     chip.setCursor(Qt.PointingHandCursor)
-    chip.setMinimumHeight(36)
+    chip.setMinimumHeight(32)
     return chip
 
 
@@ -71,7 +71,7 @@ def _tinted_icon(resource: str, color: str) -> QIcon:
 
 
 def _apply_workspace_icons(window, dark: bool) -> None:
-    nav_color = '#E6EDF5' if dark else '#334155'
+    nav_color = '#CBD5E1' if dark else '#475569'
     nav_icons = {
         'btn_page_home': ':/icons/icons/cil-home.png',
         'btn_page_pending': ':/icons/icons/friend.png',
@@ -85,7 +85,7 @@ def _apply_workspace_icons(window, dark: bool) -> None:
         button.setIcon(_tinted_icon(resource, nav_color))
         button.setIconSize(QSize(18, 18))
 
-    window_color = '#E6EDF5' if dark else '#334155'
+    window_color = '#CBD5E1' if dark else '#475569'
     window.minimizeAppBtn.setIcon(_tinted_icon(':/icons/icons/icon_minimize.png', window_color))
     maximize_icon = ':/icons/icons/icon_restore.png' if window.is_maximum_size else ':/icons/icons/icon_maximize.png'
     window.maximizeRestoreAppBtn.setIcon(_tinted_icon(maximize_icon, window_color))
@@ -105,8 +105,8 @@ def _card(title: str, hint: str = '') -> tuple[QFrame, QVBoxLayout, QHBoxLayout]
     card = QFrame()
     card.setObjectName('Card')
     layout = QVBoxLayout(card)
-    layout.setContentsMargins(20, 18, 20, 18)
-    layout.setSpacing(12)
+    layout.setContentsMargins(18, 14, 18, 14)
+    layout.setSpacing(10)
     header = QHBoxLayout()
     header.setSpacing(12)
     header.addWidget(_label(title, 'CardTitle'))
@@ -392,7 +392,7 @@ def build_message_page(window) -> None:
     new_page = window.wechat
     root = QVBoxLayout(new_page)
     root.setContentsMargins(0, 0, 0, 0)
-    root.setSpacing(14)
+    root.setSpacing(12)
 
     header = QHBoxLayout()
     header.setSpacing(12)
@@ -407,7 +407,7 @@ def build_message_page(window) -> None:
     body = QHBoxLayout()
     body.setSpacing(14)
     left = QVBoxLayout()
-    left.setSpacing(14)
+    left.setSpacing(10)
 
     message_card, message_body, message_header = _card('消息内容')
     _set_role(window.btn_clear_msg, 'ghost')
@@ -421,7 +421,7 @@ def build_message_page(window) -> None:
         column = QVBoxLayout()
         column.setSpacing(6)
         column.addWidget(_label(title, 'FieldLabel'))
-        editor.setMinimumHeight(110)
+        editor.setMinimumHeight(92)
         editor.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         column.addWidget(editor)
         message_columns.addLayout(column, 1)
@@ -433,7 +433,7 @@ def build_message_page(window) -> None:
     _set_role(window.btn_clear_file, 'ghost')
     file_header.addWidget(window.btn_add_file)
     file_header.addWidget(window.btn_clear_file)
-    window.file_list_widget.setMinimumHeight(70)
+    window.file_list_widget.setMinimumHeight(64)
     file_body.addWidget(window.file_list_widget)
     left.addWidget(file_card, 2)
 
@@ -442,7 +442,7 @@ def build_message_page(window) -> None:
     name_header.addWidget(window.btn_clear_name)
     name_row = QVBoxLayout()
     name_row.setSpacing(8)
-    window.name_text_edit.setMinimumHeight(72)
+    window.name_text_edit.setMinimumHeight(64)
     window.name_text_edit.setPlaceholderText('输入好友昵称，一行一个')
     name_row.addWidget(window.name_text_edit)
     window.rb_at_everyone = _option_chip('@所有人', 'rb_at_everyone')
@@ -644,10 +644,14 @@ def build_settings_drawer(window) -> None:
         '<p style="color:#94A3B8; line-height:150%;">'
         '1. 在「群发消息」页填写内容与联系人。<br>'
         '2. 发送前检查附件与发送快捷键。<br>'
-        '3. 双击此区域可以打开视频教程。'
+        '3. 双击此区域可以打开视频教程。<br>'
+        '4. 发送失败时打开日志目录查看详细原因。'
         '</p>'
     )
     help_body.addWidget(window.textEdit)
+    window.btn_open_log_dir = _button('打开日志目录', 'ghost')
+    window.btn_open_log_dir.setToolTip('日志文件保存在用户目录的 AppData\\Local\\WeChatMassTool\\logs 下')
+    help_body.addWidget(window.btn_open_log_dir)
     panel_layout.addWidget(help_card)
     panel_layout.addStretch(1)
 
@@ -658,6 +662,7 @@ def build_settings_drawer(window) -> None:
 def _configure_sidebar(window) -> None:
     window.leftMenuBg.setMinimumWidth(224)
     window.leftMenuBg.setMaximumWidth(224)
+    window.stackedWidget.setStyleSheet('')
     window.topLogoInfo.setMinimumHeight(72)
     window.topLogoInfo.setMaximumHeight(72)
     window.topLogo.setGeometry(16, 16, 40, 40)
@@ -734,31 +739,32 @@ def set_sidebar_compact(window, compact: bool) -> None:
 
 def apply_workspace_theme(window, dark: bool) -> None:
     """Synchronize explicit button surfaces for reliable Qt rendering."""
-    help_color = '#94A3B8' if dark else '#5B6B7A'
+    help_color = '#94A3B8' if dark else '#64748B'
     _apply_workspace_icons(window, dark)
     window.textEdit.setHtml(
         f'<p style="color:{help_color}; line-height:150%;">'
         '1. 在「群发消息」页填写内容与联系人。<br>'
         '2. 发送前检查附件与发送快捷键。<br>'
-        '3. 双击此区域可以打开视频教程。'
+        '3. 双击此区域可以打开视频教程。<br>'
+        '4. 发送失败时打开日志目录查看详细原因。'
         '</p>'
     )
     if dark:
         styles = {
             'primary': (
                 'background: #22C55E; color: #052E16; border: 1px solid #22C55E;',
-                'background: #35D36F; color: #052E16; border: 1px solid #35D36F;',
+                'background: #34D399; color: #052E16; border: 1px solid #34D399;',
                 'background: #16A34A; color: #052E16; border: 1px solid #16A34A;',
             ),
             'secondary': (
-                'background: transparent; color: #D7E3EE; border: 1px solid #2B3D50;',
-                'background: #16212C; color: #E6EDF5; border: 1px solid #3A4E63;',
-                'background: #101821; color: #E6EDF5; border: 1px solid #3A4E63;',
+                'background: transparent; color: #CBD5E1; border: 1px solid #334155;',
+                'background: #162033; color: #E2E8F0; border: 1px solid #475569;',
+                'background: #1B2940; color: #E2E8F0; border: 1px solid #475569;',
             ),
             'ghost': (
-                'background: transparent; color: #8FA1B3; border: 1px solid transparent;',
-                'background: #16212C; color: #E6EDF5; border: 1px solid transparent;',
-                'background: #101821; color: #E6EDF5; border: 1px solid transparent;',
+                'background: transparent; color: #94A3B8; border: 1px solid transparent;',
+                'background: #162033; color: #E2E8F0; border: 1px solid transparent;',
+                'background: #1B2940; color: #E2E8F0; border: 1px solid transparent;',
             ),
         }
     else:
@@ -769,14 +775,14 @@ def apply_workspace_theme(window, dark: bool) -> None:
                 'background: #166534; color: #FFFFFF; border: 1px solid #166534;',
             ),
             'secondary': (
-                'background: transparent; color: #334155; border: 1px solid #C9D8CD;',
-                'background: #E8F1EA; color: #0F172A; border: 1px solid #AFC5B5;',
-                'background: #DCE8E0; color: #0F172A; border: 1px solid #AFC5B5;',
+                'background: #FFFFFF; color: #334155; border: 1px solid #E2E8F0;',
+                'background: #F8FAFC; color: #0F172A; border: 1px solid #CBD5E1;',
+                'background: #F1F5F9; color: #0F172A; border: 1px solid #CBD5E1;',
             ),
             'ghost': (
-                'background: transparent; color: #5B6B7A; border: 1px solid transparent;',
-                'background: #E8F1EA; color: #0F172A; border: 1px solid transparent;',
-                'background: #DCE8E0; color: #0F172A; border: 1px solid transparent;',
+                'background: transparent; color: #64748B; border: 1px solid transparent;',
+                'background: #F1F5F9; color: #0F172A; border: 1px solid transparent;',
+                'background: #E2E8F0; color: #0F172A; border: 1px solid transparent;',
             ),
         }
     role_names = {
@@ -795,7 +801,7 @@ def apply_workspace_theme(window, dark: bool) -> None:
         for object_name in object_names:
             for button in window.findChildren(QPushButton, object_name):
                 button.setStyleSheet(
-                    f'QPushButton {{ {normal} border-radius: 10px; padding: 9px 16px; '
+                    f'QPushButton {{ {normal} border-radius: 6px; padding: 8px 14px; '
                     f'font-weight: 700; }}'
                     f'QPushButton:hover {{ {hover} }}'
                     f'QPushButton:pressed {{ {pressed} }}'
@@ -815,7 +821,7 @@ def apply_workspace_theme(window, dark: bool) -> None:
     normal, hover, pressed = danger
     for button in window.findChildren(QPushButton, 'btn_clear_all'):
         button.setStyleSheet(
-            f'QPushButton {{ {normal} border-radius: 10px; padding: 9px 16px; font-weight: 700; }}'
+            f'QPushButton {{ {normal} border-radius: 6px; padding: 8px 14px; font-weight: 700; }}'
             f'QPushButton:hover {{ {hover} }}'
             f'QPushButton:pressed {{ {pressed} }}'
         )
@@ -825,32 +831,32 @@ def apply_workspace_theme(window, dark: bool) -> None:
 def _apply_message_header_action_style(window, dark: bool) -> None:
     if dark:
         secondary = (
-            'background: transparent; color: #D7E3EE; border: 1px solid #2B3D50;',
-            'background: #16212C; color: #E6EDF5; border: 1px solid #3A4E63;',
+            'background: transparent; color: #CBD5E1; border: 1px solid #334155;',
+            'background: #162033; color: #E2E8F0; border: 1px solid #475569;',
         )
         ghost = (
-            'background: transparent; color: #8FA1B3; border: none;',
-            'background: #16212C; color: #E6EDF5; border: none;',
+            'background: transparent; color: #94A3B8; border: none;',
+            'background: #162033; color: #E2E8F0; border: none;',
         )
     else:
         secondary = (
-            'background: transparent; color: #334155; border: 1px solid #C9D8CD;',
-            'background: #E8F1EA; color: #0F172A; border: 1px solid #AFC5B5;',
+            'background: #FFFFFF; color: #334155; border: 1px solid #E2E8F0;',
+            'background: #F8FAFC; color: #0F172A; border: 1px solid #CBD5E1;',
         )
         ghost = (
-            'background: transparent; color: #5B6B7A; border: none;',
-            'background: #E8F1EA; color: #0F172A; border: none;',
+            'background: transparent; color: #64748B; border: none;',
+            'background: #F1F5F9; color: #0F172A; border: none;',
         )
     normal, hover = secondary
     window.btn_add_file.setStyleSheet(
-        f'QPushButton {{ {normal} border-radius: 8px; padding: 3px 10px; font-weight: 600; }}'
+        f'QPushButton {{ {normal} border-radius: 6px; padding: 3px 10px; font-weight: 600; }}'
         f'QPushButton:hover {{ {hover} }}'
     )
     window.btn_add_file.setFixedHeight(30)
     normal, hover = ghost
     for button in (window.btn_clear_file, window.btn_clear_msg, window.btn_clear_name):
         button.setStyleSheet(
-            f'QPushButton {{ {normal} border-radius: 8px; padding: 3px 10px; font-weight: 600; }}'
+            f'QPushButton {{ {normal} border-radius: 6px; padding: 3px 10px; font-weight: 600; }}'
             f'QPushButton:hover {{ {hover} }}'
         )
         button.setFixedHeight(30)

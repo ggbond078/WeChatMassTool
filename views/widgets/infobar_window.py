@@ -3,8 +3,8 @@
 # Date:         2024/5/23 上午01:09
 # Description:
 
-from PySide6.QtCore import (Qt, QTimer, QPropertyAnimation, QPoint)
-from PySide6.QtWidgets import (QFrame, QGraphicsOpacityEffect)
+from PySide2.QtCore import (Qt, QTimer, QPropertyAnimation, QPoint)
+from PySide2.QtWidgets import (QFrame, QGraphicsOpacityEffect)
 
 from views.ui_components import create_opacity_animation
 from views.ui_designs import Ui_InfoBar

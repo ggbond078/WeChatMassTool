@@ -4,14 +4,16 @@
 # Description:
 
 import datetime
+import logging
+import os
 import platform
 import sys
 from ctypes import windll
 
-import PySide6
+import PySide2
 import uiautomation
-from PySide6 import QtGui
-from PySide6.QtWidgets import (QApplication, QMessageBox)
+from PySide2 import QtGui
+from PySide2.QtWidgets import (QApplication, QMessageBox)
 from cprint import cprint
 
 from config import (Animate, WeChat)
@@ -19,9 +21,11 @@ from controllers import ControllerMain
 from utils import (
     get_specific_process, is_process_running, get_resource_path, get_config, minimize_wechat, write_file, delete_file,
     path_exists, get_temp_file_path, read_file, get_pid, delete_old_files_with_extension, join_path,
-    get_wechat_version, format_version, open_webpage
+    get_wechat_version, format_version, open_webpage, log_event, log_exception, setup_logging
 )
 from version import (__version__, __project_name__)
+
+logger = logging.getLogger(__name__)
 
 
 def set_app_user_model_id():
@@ -36,6 +40,27 @@ def set_app_user_model_id():
 def print_startup_info():
     # 获取系统信息
     system_info = platform.uname()
+    screen_width = windll.user32.GetSystemMetrics(0)
+    screen_height = windll.user32.GetSystemMetrics(1)
+    log_event(
+        logger,
+        logging.INFO,
+        'startup_environment',
+        project=__project_name__,
+        version=__version__,
+        os_name=system_info.system,
+        os_release=system_info.release,
+        os_version=system_info.version,
+        processor=system_info.processor,
+        python_version=platform.python_version(),
+        pyside_version=PySide2.__version__,
+        uiautomation_version=uiautomation.version.VERSION,
+        screen_width=screen_width,
+        screen_height=screen_height,
+        frozen=bool(getattr(sys, 'frozen', False)),
+        executable=sys.executable,
+        cwd=os.getcwd()
+    )
 
     bot_logo = r"""
 
@@ -59,13 +84,25 @@ def print_startup_info():
         版本: {system_info.version}
         处理器: {system_info.processor}
         Python: {platform.python_version()}
-        PySide6: {PySide6.__version__}
+        PySide2: {PySide2.__version__}
         uiautomation: {uiautomation.version.VERSION}
 
         项目启动中...
     """
-    cprint.info(bot_logo.rstrip('\n'))
-    cprint.info(startup_info.rstrip('\n'))
+    if sys.stdout is None:
+        log_event(logger, logging.INFO, 'console_output_unavailable')
+        return
+    try:
+        cprint.info(bot_logo.rstrip('\n'))
+        cprint.info(startup_info.rstrip('\n'))
+    except (AttributeError, UnicodeEncodeError, ValueError, OSError) as error:
+        log_event(
+            logger,
+            logging.WARNING,
+            'console_output_failed',
+            error_type=type(error).__name__,
+            error=str(error)
+        )
 
 
 def show_wechat_upgrade_dialog(current_version: str):
@@ -82,7 +119,7 @@ def show_wechat_upgrade_dialog(current_version: str):
     download_button = message_box.addButton('前往下载', QMessageBox.AcceptRole)
     message_box.addButton('稍后', QMessageBox.RejectRole)
     message_box.setDefaultButton(download_button)
-    message_box.exec()
+    message_box.exec_()
     if message_box.clickedButton() is download_button:
         open_webpage(WeChat.DOWNLOAD_LINK)
 
@@ -92,6 +129,11 @@ def check_wechat_version(proc_name: str):
     try:
         version = get_wechat_version(proc_name=proc_name)
     except (ValueError, OSError) as error:
+        log_exception(
+            logger,
+            'wechat_version_detection_failed',
+            process_name=proc_name
+        )
         if proc_name == WeChat.LEGACY_PROCESS_NAME:
             show_wechat_upgrade_dialog(current_version='3.x')
             return
@@ -103,6 +145,13 @@ def check_wechat_version(proc_name: str):
         return
 
     version_text = format_version(version)
+    log_event(
+        logger,
+        logging.INFO,
+        'wechat_version_detected',
+        process_name=proc_name,
+        version=version_text
+    )
     if version < WeChat.MIN_SUPPORTED_VERSION:
         show_wechat_upgrade_dialog(current_version=version_text)
 
@@ -110,11 +159,14 @@ def check_wechat_version(proc_name: str):
 def check_wechat_running():
     """检查微信是否运行，并提示版本兼容性"""
     if get_specific_process(proc_name=WeChat.WeChat_PROCESS_NAME):
+        log_event(logger, logging.INFO, 'wechat_process_detected', process_name=WeChat.WeChat_PROCESS_NAME)
         check_wechat_version(proc_name=WeChat.WeChat_PROCESS_NAME)
         return
     if get_specific_process(proc_name=WeChat.LEGACY_PROCESS_NAME):
+        log_event(logger, logging.INFO, 'wechat_process_detected', process_name=WeChat.LEGACY_PROCESS_NAME)
         check_wechat_version(proc_name=WeChat.LEGACY_PROCESS_NAME)
         return
+    log_event(logger, logging.ERROR, 'wechat_process_missing')
     QMessageBox.critical(None, '报错咯', "微信未启动!")
     sys.exit()  # 退出程序
 
@@ -123,11 +175,12 @@ def initialize_application():
     app = QApplication()
     app.setWindowIcon(QtGui.QIcon(get_resource_path(r'views/resources/images/favicon.ico')))
     check_wechat_running()
+    log_event(logger, logging.INFO, 'application_window_starting')
     # 获取默认配置, 看是否需要以动画形式启动
     controller = ControllerMain(get_config(WeChat.APP_NAME, section=Animate.SECTION, option=Animate.OPTION))
     # 绑定退出事件, 关闭微信窗口
     app.aboutToQuit.connect(lambda: minimize_wechat(WeChat.WINDOW_CLASSNAME, name=WeChat.WINDOW_NAME))
-    sys.exit(app.exec())
+    sys.exit(app.exec_())
 
 
 def ensure_single_instance():
@@ -146,6 +199,7 @@ def ensure_single_instance():
 
     if path_exists(lock_file):
         print("另一个实例已经在运行。")
+        log_event(logger, logging.WARNING, 'second_instance_detected', lock_file=lock_file)
         sys.exit()
 
     # 创建锁文件
@@ -154,6 +208,14 @@ def ensure_single_instance():
 
 def main():
     """主入口"""
+    log_file = setup_logging(WeChat.APP_NAME)
+    log_event(
+        logger,
+        logging.INFO,
+        'application_starting',
+        argv=sys.argv,
+        log_file=log_file
+    )
     # 删除三天前的进度缓存文件
     delete_old_files_with_extension(get_temp_file_path(WeChat.APP_NAME), days=3, file_extension='.tmp')
     # 删除运行缓存文件

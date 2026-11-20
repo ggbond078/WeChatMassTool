@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
-from PySide6.QtCore import (QCoreApplication, QMetaObject, QRect, QSize, Qt)
-from PySide6.QtGui import (QCursor, QFont, QIcon)
-from PySide6.QtWidgets import (QComboBox, QFrame, QGridLayout, QHBoxLayout, QLabel, QLineEdit, QListWidget,
+from PySide2.QtCore import (QCoreApplication, QMetaObject, QRect, QSize, Qt)
+from PySide2.QtGui import (QCursor, QFont, QIcon)
+from PySide2.QtWidgets import (QComboBox, QFrame, QGridLayout, QHBoxLayout, QLabel, QLineEdit, QListWidget,
                                QProgressBar, QPushButton, QRadioButton, QSizePolicy, QStackedWidget, QTextEdit,
                                QVBoxLayout, QWidget)
 from .resources_rc import *

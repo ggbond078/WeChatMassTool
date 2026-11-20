@@ -5,9 +5,9 @@
 
 import sys
 
-from PySide6.QtCore import (Qt, QTimer, QPropertyAnimation, QRect, QEasingCurve, Signal)
-from PySide6.QtGui import (QColor, QPainter, QFont, QPen, QIcon)
-from PySide6.QtWidgets import (QMainWindow, QGraphicsDropShadowEffect, QWidget, QApplication)
+from PySide2.QtCore import (Qt, QTimer, QPropertyAnimation, QRect, QEasingCurve, Signal)
+from PySide2.QtGui import (QColor, QPainter, QFont, QPen, QIcon)
+from PySide2.QtWidgets import (QMainWindow, QGraphicsDropShadowEffect, QWidget, QApplication)
 
 from views.ui_components import apply_shadow_effect
 from views.ui_designs import Ui_Login
@@ -38,8 +38,8 @@ class LoginWindow(QMainWindow):
         self.progress.add_shadow()
         self.progress.progress_width = 4
         self.progress.progress_color = QColor("#22C55E")
-        self.progress.text_color = QColor("#E6EDF5")
-        self.progress.bg_color = QColor("#1E2A38")
+        self.progress.text_color = QColor("#E2E8F0")
+        self.progress.bg_color = QColor("#24324A")
         self.progress.setParent(self.ui.preloader)
         self.progress.show()
 
@@ -188,4 +188,4 @@ if __name__ == "__main__":
     app = QApplication()
     app.setWindowIcon(QIcon("icon.ico"))
     window = LoginWindow()
-    sys.exit(app.exec())
+    sys.exit(app.exec_())

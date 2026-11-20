@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
-from PySide6.QtCore import (QCoreApplication, QMetaObject, QSize)
-from PySide6.QtWidgets import (QFrame, QGridLayout, QHBoxLayout, QLabel, QPushButton)
+from PySide2.QtCore import (QCoreApplication, QMetaObject, QSize)
+from PySide2.QtWidgets import (QFrame, QGridLayout, QHBoxLayout, QLabel, QPushButton)
 from .resources_rc import *
 
 
@@ -19,7 +19,10 @@ class Ui_InfoBar(object):
         self.gridLayout.setContentsMargins(0, 0, 0, 0)
         self.frame = QFrame(Form)
         self.frame.setObjectName(u"frame")
-        self.frame.setStyleSheet(u"QFrame#frame{background-color: rgba(56,59,31,128);border-radius: 10px;}")
+        self.frame.setStyleSheet(
+            u"QFrame#frame{background-color: rgba(17,28,46,235);"
+            u"border: 1px solid #334155;border-radius: 8px;}"
+        )
         self.frame.setFrameShape(QFrame.StyledPanel)
         self.frame.setFrameShadow(QFrame.Raised)
         self.horizontalLayout = QHBoxLayout(self.frame)
@@ -36,13 +39,13 @@ class Ui_InfoBar(object):
         self.prompt_type_label.setObjectName(u"prompt_type_label")
         self.prompt_type_label.setMinimumSize(QSize(40, 0))
         self.prompt_type_label.setMaximumSize(QSize(40, 16777215))
-        self.prompt_type_label.setStyleSheet(u"color: white;font: 700 12pt \"Microsoft YaHei UI\";")
+        self.prompt_type_label.setStyleSheet(u"color: #E2E8F0;font: 700 11pt \"Microsoft YaHei UI\";")
 
         self.horizontalLayout.addWidget(self.prompt_type_label)
 
         self.prompt_info_label = QLabel(self.frame)
         self.prompt_info_label.setObjectName(u"prompt_info_label")
-        self.prompt_info_label.setStyleSheet(u"color: white;font: 500 11pt \"Microsoft YaHei UI\";")
+        self.prompt_info_label.setStyleSheet(u"color: #CBD5E1;font: 500 10pt \"Microsoft YaHei UI\";")
 
         self.horizontalLayout.addWidget(self.prompt_info_label)
 
@@ -52,22 +55,18 @@ class Ui_InfoBar(object):
         self.btn_close_prompt.setMaximumSize(QSize(20, 16777215))
         self.btn_close_prompt.setStyleSheet(u"QPushButton {\n"
 "    border: none;\n"
-"	color: white\n"
+"	color: #94A3B8;\n"
+"	border-radius: 4px;\n"
 "}\n"
 "\n"
 "\n"
 "QPushButton:hover {\n"
-"    border: 1px solid #ccc;\n"
-"    border-radius: 5px;\n"
-"    background-color: #f0f0f0;\n"
-"    box-shadow: 3px 3px 5px rgba(0, 0, 0, 0.3);\n"
+"    color: #E2E8F0;\n"
+"    background-color: #162033;\n"
 "}\n"
 "\n"
 "QPushButton:pressed {\n"
-"    border: 1px solid #aaa;\n"
-"    border-radius: 5px;\n"
-"    background-color: #ccc; /* \u70b9\u51fb\u65f6\u7684\u80cc\u666f\u8272\u4e3a\u7070\u8272 */\n"
-"    box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.3);\n"
+"    background-color: #1B2940;\n"
 "}\n"
 "")
 

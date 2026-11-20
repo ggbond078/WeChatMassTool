@@ -5,8 +5,8 @@
 
 from typing import (Iterable, Union)
 
-from PySide6.QtCore import (QEasingCurve, QPropertyAnimation, QParallelAnimationGroup)
-from PySide6.QtWidgets import QWidget, QGraphicsOpacityEffect
+from PySide2.QtCore import (QEasingCurve, QPropertyAnimation, QParallelAnimationGroup)
+from PySide2.QtWidgets import QWidget, QGraphicsOpacityEffect
 
 
 def create_width_animation(widget: QWidget, target_width: int, duration=800):

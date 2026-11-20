@@ -39,10 +39,17 @@ class WeChatConfig:
     CONTACT_MANAGER_BUTTON_Y = 98
     RECENT_GROUPS_BUTTON_X = 52
     RECENT_GROUPS_BUTTON_Y = 216
-    GROUP_LIST_CROP_LEFT = 0.0
-    GROUP_LIST_CROP_TOP = 0.34
-    GROUP_LIST_CROP_WIDTH = 0.30
-    GROUP_LIST_CROP_HEIGHT = 0.66
+    # WeChat 4.x fixed UI chrome in 96-DPI logical pixels. These values describe
+    # the client layout itself, so they stay valid for any window size or screen
+    # resolution and must always be multiplied by the window DPI scale.
+    SIDEBAR_WIDTH = 50
+    SESSION_LIST_WIDTH = 256
+    MESSAGE_AREA_LEFT = 306
+    CHAT_TITLE_HEIGHT = 80
+    GROUP_LIST_LEFT = 240
+    GROUP_LIST_TOP = 90
+    GROUP_LIST_RIGHT_MARGIN = 10
+    GROUP_LIST_BOTTOM_MARGIN = 10
     GROUP_LIST_SCROLL_TIMES = 5
     GROUP_LIST_MAX_SCROLL = 50
     SEARCH_BOX_X = 165
@@ -70,13 +77,14 @@ class DarkConfig:
     QSS_FILE = 'views/resources/themes/py_dracula_dark.qss'
 
     # BTNS LEFT AND RIGHT BOX COLORS
-    BTN_LEFT_BOX_COLOR = "background-color: #173A26;"
+    BTN_LEFT_BOX_COLOR = "background-color: #12291D;"
     BTN_RIGHT_BOX_COLOR = "background-color: #22C55E;"
 
     # MENU SELECTED STYLESHEET
     MENU_SELECTED_STYLESHEET = """
-        background-color: #173A26;
-        border: 1px solid #245C3A;
+        background-color: #12291D;
+        border: 1px solid #1F4D36;
+        border-left: 3px solid #22C55E;
         color: #4ADE80;
         """
 
@@ -88,13 +96,14 @@ class LightConfig:
     QSS_FILE = 'views/resources/themes/py_dracula_light.qss'
 
     # BTNS LEFT AND RIGHT BOX COLORS
-    BTN_LEFT_BOX_COLOR = "background-color: #DCFCE7;"
+    BTN_LEFT_BOX_COLOR = "background-color: #F0FDF4;"
     BTN_RIGHT_BOX_COLOR = "background-color: #16A34A;"
 
     # MENU SELECTED STYLESHEET
     MENU_SELECTED_STYLESHEET = """
-        background-color: #DCFCE7;
+        background-color: #F0FDF4;
         border: 1px solid #BBF7D0;
+        border-left: 3px solid #16A34A;
         color: #15803D;
         """
 

@@ -3,14 +3,18 @@
 # Date:         2024/4/1 00:00
 # Description:
 
+import logging
+import time
 from typing import Dict
 from collections import defaultdict
 
 import uiautomation as auto
-from PySide6.QtCore import (QObject, QRunnable, QThreadPool, Slot, Signal)
+from PySide2.QtCore import (QObject, QRunnable, QThreadPool, Slot, Signal)
 
-from utils import (WxOperation, write_file)
+from utils import (WxOperation, write_file, log_event, log_exception)
 from models import RecordGeneratorModel
+
+logger = logging.getLogger(__name__)
 
 
 class TaskRunnable(QRunnable):
@@ -23,6 +27,8 @@ class TaskRunnable(QRunnable):
         self.toggleTaskStatusSignal = kwargs.get('toggleTaskStatusSignal')
 
     def run(self):
+        started = time.monotonic()
+        log_event(logger, logging.INFO, 'task_started', task_id=self.task_id)
         try:
             with auto.UIAutomationInitializerInThread():
                 self.execute_task()
@@ -30,17 +36,35 @@ class TaskRunnable(QRunnable):
             self.handle_error(e)
         finally:
             self.toggleTaskStatusSignal.emit(self.task_id)
+            log_event(
+                logger,
+                logging.INFO,
+                'task_finished',
+                task_id=self.task_id,
+                elapsed_seconds=round(time.monotonic() - started, 3)
+            )
 
     def execute_task(self):
         # 将由子类实现具体任务
         pass
 
     def handle_error(self, error):
-        # 可以在这里处理或记录错误
-        print(f"Error in {self.task_id}: {error}")
+        log_exception(
+            logger,
+            'task_failed',
+            task_id=self.task_id,
+            error_type=type(error).__name__,
+            error=str(error)
+        )
 
 
 class SendMessageTask(TaskRunnable):
+    def handle_error(self, error):
+        super().handle_error(error)
+        show_info_bar = self.kwargs.get('showInfoBarSignal')
+        if show_info_bar:
+            show_info_bar.emit(False, f'发送任务异常: {error}')
+
     def execute_task(self):
         # 实现发送消息的逻辑
         message_info = self.kwargs.get('message_info')
@@ -58,8 +82,23 @@ class SendMessageTask(TaskRunnable):
         texts = '\n'.join(message_info.get('msgs', str()))
         files = '\n'.join(message_info.get('file_paths', str()))
         #
-        exec_info_map = dict()
-        infobar_info = [0, 0]
+        success_count = 0
+        failure_count = 0
+        log_event(
+            logger,
+            logging.INFO,
+            'send_batch_started',
+            total=len(name_list),
+            cache_index=cache_index,
+            text_name_list_count=text_name_list_count,
+            text_count=len(message_info.get('msgs', list())),
+            file_count=len(message_info.get('file_paths', list())),
+            add_remark_name=message_info.get('add_remark_name'),
+            at_everyone=message_info.get('at_everyone'),
+            text_interval=message_info.get('text_interval'),
+            file_interval=message_info.get('file_interval'),
+            send_shortcut=message_info.get('send_shortcut')
+        )
         # 首先更新 progress 进度条
         updatedProgressSignal.emit(0, len(name_list))
         #
@@ -67,13 +106,32 @@ class SendMessageTask(TaskRunnable):
             # 不满足 (不存在缓存进度索引 和 当前索引小于进度索引) 就往下执行, 用于跳过以发送的用户
             if not (cache_index and idx <= cache_index):
                 check_pause()  # 检查程序是否暂停
+                started = time.monotonic()
+                exec_info_map = {'昵称': name, '文本': texts, '文件': files}
                 try:
-                    exec_info_map.update({'昵称': name, '文本': texts, '文件': files, '状态': '成功'})
                     self.func(name, **message_info)
+                    exec_info_map.update({'状态': '成功'})
                     infobar_info = [True, f'{name[:8]} 发送成功']
-                except (ValueError, TypeError, AssertionError, NameError) as e:
-                    exec_info_map.update({'状态': '失败', '备注': str(e)})
+                    success_count += 1
+                    log_event(
+                        logger,
+                        logging.INFO,
+                        'message_send_succeeded',
+                        recipient=name,
+                        index=idx,
+                        elapsed_seconds=round(time.monotonic() - started, 3)
+                    )
+                except Exception as e:
+                    exec_info_map.update({'状态': '失败', '备注': f'{type(e).__name__}: {e}'})
                     infobar_info = [False, f'{name[:8]} {str(e)}']
+                    failure_count += 1
+                    log_exception(
+                        logger,
+                        'message_send_failed',
+                        recipient=name,
+                        index=idx,
+                        elapsed_seconds=round(time.monotonic() - started, 3)
+                    )
                 finally:
                     recordExecInfoSignal.emit(exec_info_map)
                     showInfoBarSignal.emit(*infobar_info)
@@ -83,11 +141,38 @@ class SendMessageTask(TaskRunnable):
                     # 触发删除缓存进度索引文件
                     if text_name_list_count == (idx + 1):
                         deleteCacheProgressSignal.emit(True)
+            else:
+                log_event(
+                    logger,
+                    logging.DEBUG,
+                    'message_send_skipped_by_cache',
+                    recipient=name,
+                    index=idx,
+                    cache_index=cache_index
+                )
             # 通知更新进度条
             updatedProgressSignal.emit(idx + 1, len(name_list))  # 通知控制器任务完成
+        log_event(
+            logger,
+            logging.INFO,
+            'send_batch_finished',
+            total=len(name_list),
+            success=success_count,
+            failed=failure_count
+        )
+        summary = f'发送结束：成功 {success_count} 位，失败 {failure_count} 位'
+        if failure_count:
+            summary = f'{summary}，可在设置中打开日志目录查看原因'
+        showInfoBarSignal.emit(failure_count == 0, summary)
 
 
 class GetNameListTask(TaskRunnable):
+    def handle_error(self, error):
+        super().handle_error(error)
+        export_signal = self.kwargs.get('exportNameListSignal')
+        if export_signal:
+            export_signal.emit(False, f'导出失败: {error}')
+
     def execute_task(self):
         tag = self.kwargs.get('tag')
         file_path = self.kwargs.get('file_path')
@@ -97,6 +182,7 @@ class GetNameListTask(TaskRunnable):
             write_file(file_path, data=result)
             exportNameListSignal.emit(True, '文件导出成功')
         except LookupError:
+            log_exception(logger, 'name_list_export_failed', tag=tag, file_path=file_path)
             exportNameListSignal.emit(False, f'找不到 {tag} 标签')
 
 
@@ -138,7 +224,9 @@ class ModelMain(QObject):
         """导出标签好友名单"""
         task_id = 'name_list'
         if self.task_status_map.get(task_id):
+            log_event(logger, logging.WARNING, 'task_already_running', task_id=task_id)
             return
+        log_event(logger, logging.INFO, 'name_list_export_requested', tag=tag, file_path=file_path)
         self.toggleTaskStatusSignal.emit(task_id)
 
         runnable = GetNameListTask(
@@ -155,7 +243,9 @@ class ModelMain(QObject):
         """导出群聊名单"""
         task_id = 'chat_group_name_list'
         if self.task_status_map.get(task_id):
+            log_event(logger, logging.WARNING, 'task_already_running', task_id=task_id)
             return
+        log_event(logger, logging.INFO, 'chat_group_list_export_requested', file_path=file_path)
         self.toggleTaskStatusSignal.emit(task_id)
 
         runnable = GetChatGroupNameListTask(
@@ -171,7 +261,16 @@ class ModelMain(QObject):
         """发送微信消息"""
         task_id = 'send_msg'
         if self.task_status_map.get(task_id):
+            log_event(logger, logging.WARNING, 'task_already_running', task_id=task_id)
             return
+        log_event(
+            logger,
+            logging.INFO,
+            'send_task_requested',
+            name_count=len(message_info.get('name_list', list())),
+            pasted_name_count=len(message_info.get('names', str()).split('\n')) if message_info.get('names') else 0,
+            file_count=len(message_info.get('file_paths', list()))
+        )
         self.toggleTaskStatusSignal.emit(task_id)
 
         runnable = SendMessageTask(
@@ -209,7 +308,6 @@ class ModelMain(QObject):
 
     @Slot(dict)
     def record_exec_info(self, item):
-        # print('record item ==>', item)
         self.record.record_exec_result(item)
 
     @Slot(bool)
