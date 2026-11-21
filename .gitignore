@@ -4,3 +4,11 @@ build
 dist
 demo.py
 *.pyc
+build-*/
+dist-*/
+.tmp/
+tools/build/
+tools/dist/
+@AutomationLog.txt
+untitled.txt
+installer/*.wixobj
